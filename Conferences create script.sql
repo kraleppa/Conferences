@@ -72,10 +72,10 @@ CREATE TABLE Country (
 
 -- Table: DayParticipant
 CREATE TABLE DayParticipant (
-    DayParticipantID int  NOT NULL,
+    DayParticipantID int identity(1,1)  NOT NULL
+		CONSTRAINT DayParticipant_pk PRIMARY KEY,
     PersonID int  NOT NULL,
     DayReservationID int  NOT NULL,
-    CONSTRAINT DayParticipant_pk PRIMARY KEY  (DayParticipantID)
 );
 
 -- Table: DayReservation
