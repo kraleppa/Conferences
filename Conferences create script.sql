@@ -93,9 +93,10 @@ CREATE TABLE DayReservation (
 
 -- Table: Employee
 CREATE TABLE Employee (
-    ClientID int  NOT NULL,
+    ClientID int  NOT NULL
+		CONSTRAINT Employee_pk PRIMARY KEY,
     PersonID int  NOT NULL,
-    CONSTRAINT Employee_pk PRIMARY KEY  (PersonID)
+    
 );
 
 -- Table: IndividualClient
