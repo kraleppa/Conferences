@@ -125,13 +125,15 @@ CREATE TABLE Prices (
     CONSTRAINT Prices_pk PRIMARY KEY  (PriceID)
 );
 
--- Table: Resvervation
-CREATE TABLE Resvervation (
-    ResevationID int  NOT NULL,
+-- Table: Reservation
+CREATE TABLE Reservation (
+    ResevationID int identity(1,1)  NOT NULL
+		CONSTRAINT Resvervation_pk PRIMARY KEY,
     ClientID int  NOT NULL,
-    PaymentDate date  NULL,
+    PaymentDate date  NULL
+		check([PaymentDate] > [ReservationDate]),
     ReservationDate date  NOT NULL,
-    CONSTRAINT Resvervation_pk PRIMARY KEY  (ResevationID)
+    
 );
 
 -- Table: Student
