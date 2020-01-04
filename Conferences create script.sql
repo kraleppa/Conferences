@@ -35,27 +35,32 @@ CREATE TABLE Company (
 
 -- Table: ConferenceDay
 CREATE TABLE ConferenceDay (
-    ConferenceDayID int  NOT NULL,
+    ConferenceDayID int identity(1,1) NOT NULL
+		CONSTRAINT ConferenceDay_pk PRIMARY KEY,
     ConferenceID int  NOT NULL,
     ConferenceDate date  NOT NULL,
-    CONSTRAINT ConferenceDay_pk PRIMARY KEY  (ConferenceDayID)
 );
 
 -- Table: Conferences
 CREATE TABLE Conferences (
-    ConferenceID int  NOT NULL,
+    ConferenceID int identity(1,1)  NOT NULL
+		CONSTRAINT Conferences_pk PRIMARY KEY,
     ConferenceName varchar(50)  NOT NULL,
     ConferenceDescription varchar(255)  NOT NULL,
     StartDate date  NOT NULL,
-    EndDate date  NOT NULL,
+    EndDate date  NOT NULL
+		check([EndDate] > [StartDate]),
     CityID int  NOT NULL,
     Street varchar(50)  NOT NULL,
-    BuildingNumber int  NOT NULL,
-    StudentDiscount real  NOT NULL,
-    Limit int  NOT NULL,
-    Cancelled bit  NOT NULL,
-    BasePrice money  NOT NULL,
-    CONSTRAINT Conferences_pk PRIMARY KEY  (ConferenceID)
+    BuildingNumber int  NOT NULL
+		check([BuildingNumber] > 0),
+    StudentDiscount real  NOT NULL
+		check([StudentDiscount] >= 0),
+    Limit int  NOT NULL
+		check([Limit] > 0),
+    Cancelled bit  NULL default 0,
+    BasePrice money  NOT NULL
+		check([BasePrice] > 0),
 );
 
 -- Table: Country
