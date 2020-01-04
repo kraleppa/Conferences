@@ -135,11 +135,11 @@ CREATE TABLE Resvervation (
 
 -- Table: Student
 CREATE TABLE Student (
-    StudentID int  NOT NULL,
-    PersonID int  NULL,
-    StudentCardID int  NOT NULL,
+    StudentID int  NOT NULL
+		CONSTRAINT Student_pk PRIMARY KEY,
+    PersonID int  NULL unique,
+    StudentCardID varchar(6)  NOT NULL unique,
     ResevationID int  NOT NULL,
-    CONSTRAINT Student_pk PRIMARY KEY  (StudentID)
 );
 
 -- Table: Workshop
