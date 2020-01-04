@@ -97,9 +97,9 @@ CREATE TABLE Employee (
 
 -- Table: IndividualClient
 CREATE TABLE IndividualClient (
-    ClientID int  NOT NULL,
+    ClientID int  NOT NULL
+		 CONSTRAINT IndividualClient_pk PRIMARY KEY,
     PersonID int  NOT NULL unique,
-    CONSTRAINT IndividualClient_pk PRIMARY KEY  (ClientID)
 );
 
 -- Table: Person
