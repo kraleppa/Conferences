@@ -35,10 +35,11 @@ CREATE TABLE Company (
 
 -- Table: ConferenceDay
 CREATE TABLE ConferenceDay (
-    ConferenceDayID int  NOT NULL,
+    ConferenceDayID int identity(1,1)  NOT NULL
+		CONSTRAINT ConferenceDay_pk PRIMARY KEY,
     ConferenceID int  NOT NULL,
     ConferenceDate date  NOT NULL,
-    CONSTRAINT ConferenceDay_pk PRIMARY KEY  (ConferenceDayID)
+
 );
 
 -- Table: Conferences
@@ -48,7 +49,8 @@ CREATE TABLE Conferences (
     ConferenceName varchar(50)  NOT NULL,
     ConferenceDescription varchar(255)  NOT NULL,
     StartDate date  NOT NULL,
-    EndDate date  NOT NULL
+    EndDate date  NOT NULL,
+	CONSTRAINT ck_payment 
 		check([EndDate] > [StartDate]),
     CityID int  NOT NULL,
     Street varchar(50)  NOT NULL,
@@ -122,7 +124,8 @@ CREATE TABLE Prices (
 		CONSTRAINT Prices_pk PRIMARY KEY,
     ConferenceID int  NOT NULL,
     StartDate date  NOT NULL,
-    EndDate date  NOT NULL
+    EndDate date  NOT NULL,
+	CONSTRAINT p_date
 		check([EndDate] > [StartDate]),
     Discount real  NOT NULL
 		check([Discount] > 0),
@@ -131,9 +134,10 @@ CREATE TABLE Prices (
 -- Table: Reservation
 CREATE TABLE Reservation (
     ResevationID int identity(1,1)  NOT NULL
-		CONSTRAINT Resvervation_pk PRIMARY KEY,
+		CONSTRAINT Reservation_pk PRIMARY KEY,
     ClientID int  NOT NULL,
-    PaymentDate date  NULL
+    PaymentDate date  NULL,
+	CONSTRAINT r_date
 		check([PaymentDate] > [ReservationDate]),
     ReservationDate date  NOT NULL,
     
@@ -155,7 +159,8 @@ CREATE TABLE Workshop (
     WorkshopDictionaryID int  NOT NULL,
     ConferenceDayID int  NOT NULL,
     StartTime time  NOT NULL,
-    EndTime time  NOT NULL
+    EndTime time  NOT NULL,
+	CONSTRAINT w_time
 		check([EndTime] > [StartTime]),
     Limit int  NOT NULL 
 		check ([Limit] > 0),
@@ -175,9 +180,10 @@ CREATE TABLE WorkshopDictionary (
 
 -- Table: WorkshopParticipant
 CREATE TABLE WorkshopParticipant (
-    DayParticipantID int  NOT NULL,
+    DayParticipantID int  NOT NULL
+		CONSTRAINT WorkshopParticipant_pk PRIMARY KEY,
     WorkshopReservationID int  NOT NULL,
-    CONSTRAINT WorkshopParticipant_pk PRIMARY KEY  (DayParticipantID,WorkshopReservationID)
+
 );
 
 -- Table: WorkshopReservation
@@ -231,10 +237,10 @@ ALTER TABLE DayReservation ADD CONSTRAINT DayReservation_ConferenceDay
     FOREIGN KEY (ConferenceDayID)
     REFERENCES ConferenceDay (ConferenceDayID);
 
--- Reference: DayReservation_Resvervation (table: DayReservation)
-ALTER TABLE DayReservation ADD CONSTRAINT DayReservation_Resvervation
+-- Reference: DayReservation_Reservation (table: DayReservation)
+ALTER TABLE DayReservation ADD CONSTRAINT DayReservation_Reservation
     FOREIGN KEY (ResevationID)
-    REFERENCES Resvervation (ResevationID);
+    REFERENCES Reservation (ResevationID);
 
 -- Reference: Employee_Company (table: Employee)
 ALTER TABLE Employee ADD CONSTRAINT Employee_Company
@@ -261,8 +267,8 @@ ALTER TABLE Prices ADD CONSTRAINT Prices_Conferences
     FOREIGN KEY (ConferenceID)
     REFERENCES Conferences (ConferenceID);
 
--- Reference: Resvervation_Clients (table: Resvervation)
-ALTER TABLE Resvervation ADD CONSTRAINT Resvervation_Clients
+-- Reference: Reservation_Clients (table: Reservation)
+ALTER TABLE Reservation ADD CONSTRAINT Reservation_Clients
     FOREIGN KEY (ClientID)
     REFERENCES Clients (ClientID);
 
@@ -271,10 +277,10 @@ ALTER TABLE Student ADD CONSTRAINT Student_Person
     FOREIGN KEY (PersonID)
     REFERENCES Person (PersonID);
 
--- Reference: Student_Resvervation (table: Student)
-ALTER TABLE Student ADD CONSTRAINT Student_Resvervation
+-- Reference: Student_Reservation (table: Student)
+ALTER TABLE Student ADD CONSTRAINT Student_Reservation
     FOREIGN KEY (ResevationID)
-    REFERENCES Resvervation (ResevationID);
+    REFERENCES Reservation (ResevationID);
 
 -- Reference: WorkshopParticipant_DayParticipant (table: WorkshopParticipant)
 ALTER TABLE WorkshopParticipant ADD CONSTRAINT WorkshopParticipant_DayParticipant
