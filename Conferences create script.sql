@@ -145,11 +145,12 @@ CREATE TABLE Workshop (
 
 -- Table: WorkshopDictionary
 CREATE TABLE WorkshopDictionary (
-    WorkshopDictionaryID int  NOT NULL,
+    WorkshopDictionaryID int identity (1, 1) NOT NULL
+		 CONSTRAINT WorkshopDictionary_pk PRIMARY KEY,
     WorkshopName varchar(50)  NOT NULL,
     WorkshopDescription varchar(255)  NOT NULL,
-    Price money  NULL,
-    CONSTRAINT WorkshopDictionary_pk PRIMARY KEY  (WorkshopDictionaryID)
+    Price money  NULL default(0)
+   
 );
 
 -- Table: WorkshopParticipant
