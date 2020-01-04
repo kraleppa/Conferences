@@ -178,11 +178,12 @@ CREATE TABLE WorkshopParticipant (
 
 -- Table: WorkshopReservation
 CREATE TABLE WorkshopReservation (
-    WorkshopReservationID int  NOT NULL,
+    WorkshopReservationID int identity(1,1) NOT NULL
+		CONSTRAINT WorkshopReservation_pk PRIMARY KEY,
     WorkshopID int  NOT NULL,
     DayReservationID int  NOT NULL,
-    NormalTickets int  NOT NULL,
-    CONSTRAINT WorkshopReservation_pk PRIMARY KEY  (WorkshopReservationID)
+    NormalTickets int  NOT NULL
+		check ([NormalTickets] > 0),
 );
 
 -- foreign keys
