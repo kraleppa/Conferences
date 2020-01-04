@@ -2,20 +2,24 @@ use u_nalepa
 -- tables
 -- Table: City
 CREATE TABLE City (
-    CityID int  NOT NULL,
+    CityID int identity(1,1) NOT NULL
+		CONSTRAINT City_pk PRIMARY KEY,
     CountryID int  NOT NULL,
     City varchar(50)  NOT NULL,
-    CONSTRAINT City_pk PRIMARY KEY  (CityID)
 );
 
 -- Table: Clients
 CREATE TABLE Clients (
-    ClientID int  NOT NULL,
-    Phone varchar(9)  NOT NULL,
+    ClientID int identity(1,1)NOT NULL
+		CONSTRAINT Clients_pk PRIMARY KEY,
+    Phone varchar(9) NOT NULL
+		check (isnumeric([phone]) = 1),
     Street varchar(50)  NOT NULL,
     PostalCode varchar(10)  NOT NULL,
+		check (([PostalCode] like '[0-9][0-9]-[0-9][0-9][0-9]'
+			or [PostalCode] like '[0-9][0-9][0-9][0-9][0-9]'
+			or [PostalCode] like '[0-9][0-9][0-9][0-9][0-9][0-9]')),
     CityID int  NOT NULL,
-    CONSTRAINT Clients_pk PRIMARY KEY  (ClientID)
 );
 
 -- Table: Company
