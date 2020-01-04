@@ -136,15 +136,17 @@ CREATE TABLE Student (
 
 -- Table: Workshop
 CREATE TABLE Workshop (
-    WorkshopID int  NOT NULL,
+    WorkshopID int  NOT NULL
+		CONSTRAINT Workshop_pk PRIMARY KEY,
     WorkshopDictionaryID int  NOT NULL,
     ConferenceDayID int  NOT NULL,
     StartTime time  NOT NULL,
-    EndTime time  NOT NULL,
-    Limit int  NOT NULL,
-    Cancelled bit  NOT NULL,
-    Price money  NULL,
-    CONSTRAINT Workshop_pk PRIMARY KEY  (WorkshopID)
+    EndTime time  NOT NULL
+		check([EndTime] > [StartTime]),
+    Limit int  NOT NULL 
+		check ([Limit] > 0),
+    Cancelled bit  NULL default 0,
+    Price money  NOT NULL,
 );
 
 -- Table: WorkshopDictionary
@@ -153,7 +155,7 @@ CREATE TABLE WorkshopDictionary (
 		 CONSTRAINT WorkshopDictionary_pk PRIMARY KEY,
     WorkshopName varchar(50)  NOT NULL,
     WorkshopDescription varchar(255)  NOT NULL,
-    Price money  NULL default(0)
+    Price money  NULL default 0
    
 );
 
