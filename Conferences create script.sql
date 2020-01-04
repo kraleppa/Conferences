@@ -118,12 +118,14 @@ CREATE TABLE Person (
 
 -- Table: Prices
 CREATE TABLE Prices (
-    PriceID int  NOT NULL,
+    PriceID int identity(1,1)  NOT NULL
+		CONSTRAINT Prices_pk PRIMARY KEY,
     ConferenceID int  NOT NULL,
     StartDate date  NOT NULL,
-    EndDate date  NOT NULL,
-    Discount real  NOT NULL,
-    CONSTRAINT Prices_pk PRIMARY KEY  (PriceID)
+    EndDate date  NOT NULL
+		check([EndDate] > [StartDate]),
+    Discount real  NOT NULL
+		check([Discount] > 0),
 );
 
 -- Table: Reservation
