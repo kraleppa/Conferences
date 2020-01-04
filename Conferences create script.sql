@@ -80,12 +80,15 @@ CREATE TABLE DayParticipant (
 
 -- Table: DayReservation
 CREATE TABLE DayReservation (
-    DayReservationID int  NOT NULL,
+    DayReservationID int identity(1,1)  NOT NULL
+		CONSTRAINT DayReservation_pk PRIMARY KEY,
     ConferenceDayID int  NOT NULL,
     ResevationID int  NOT NULL,
-    NormalTickets int  NOT NULL,
-    StudentTickets int  NULL,
-    CONSTRAINT DayReservation_pk PRIMARY KEY  (DayReservationID)
+    NormalTickets int  NOT NULL
+		check([NormalTickets] > 0),
+    StudentTickets int  NULL default 0
+		check([StudentTickets] >= 0),
+    
 );
 
 -- Table: Employee
