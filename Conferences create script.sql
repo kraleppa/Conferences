@@ -35,10 +35,10 @@ CREATE TABLE Company (
 
 -- Table: ConferenceDay
 CREATE TABLE ConferenceDay (
-    ConferenceDayID int  NOT NULL,
+    ConferenceDayID int identity(1,1) NOT NULL
+		CONSTRAINT ConferenceDay_pk PRIMARY KEY,
     ConferenceID int  NOT NULL,
     ConferenceDate date  NOT NULL,
-    CONSTRAINT ConferenceDay_pk PRIMARY KEY  (ConferenceDayID)
 );
 
 -- Table: Conferences
