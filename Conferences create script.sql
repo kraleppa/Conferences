@@ -95,9 +95,9 @@ CREATE TABLE DayReservation (
 
 -- Table: Employee
 CREATE TABLE Employee (
-    ClientID int  NOT NULL
-		CONSTRAINT Employee_pk PRIMARY KEY,
-    PersonID int  NOT NULL,
+    ClientID int  NOT NULL,
+    PersonID int  NOT NULL
+		CONSTRAINT Employee_pk PRIMARY KEY
     
 );
 
@@ -180,9 +180,10 @@ CREATE TABLE WorkshopDictionary (
 
 -- Table: WorkshopParticipant
 CREATE TABLE WorkshopParticipant (
-    DayParticipantID int  NOT NULL
-		CONSTRAINT WorkshopParticipant_pk PRIMARY KEY,
+    DayParticipantID int  NOT NULL,
     WorkshopReservationID int  NOT NULL,
+	CONSTRAINT WorkshopParticipant_pk PRIMARY KEY  (DayParticipantID,WorkshopReservationID)
+	-- podwojny klucz glowny nie zmieniac tego zapisu!
 
 );
 
