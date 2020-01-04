@@ -118,21 +118,25 @@ CREATE TABLE Person (
 
 -- Table: Prices
 CREATE TABLE Prices (
-    PriceID int  NOT NULL,
+    PriceID int identity(1,1)  NOT NULL
+		CONSTRAINT Prices_pk PRIMARY KEY,
     ConferenceID int  NOT NULL,
     StartDate date  NOT NULL,
-    EndDate date  NOT NULL,
-    Discount real  NOT NULL,
-    CONSTRAINT Prices_pk PRIMARY KEY  (PriceID)
+    EndDate date  NOT NULL
+		check([EndDate] > [StartDate]),
+    Discount real  NOT NULL
+		check([Discount] > 0),
 );
 
--- Table: Resvervation
-CREATE TABLE Resvervation (
-    ResevationID int  NOT NULL,
+-- Table: Reservation
+CREATE TABLE Reservation (
+    ResevationID int identity(1,1)  NOT NULL
+		CONSTRAINT Resvervation_pk PRIMARY KEY,
     ClientID int  NOT NULL,
-    PaymentDate date  NULL,
+    PaymentDate date  NULL
+		check([PaymentDate] > [ReservationDate]),
     ReservationDate date  NOT NULL,
-    CONSTRAINT Resvervation_pk PRIMARY KEY  (ResevationID)
+    
 );
 
 -- Table: Student
