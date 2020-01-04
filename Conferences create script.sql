@@ -24,11 +24,13 @@ CREATE TABLE Clients (
 
 -- Table: Company
 CREATE TABLE Company (
-    ClientID int  NOT NULL,
+    ClientID int  NOT NULL
+		constraint Copmany_pk primary key,
     CompanyName varchar(50)  NOT NULL,
-    NIP int  NOT NULL,
-    Email varchar(30)  NOT NULL,
-    CONSTRAINT Company_pk PRIMARY KEY  (ClientID)
+    NIP varchar(10)  NOT NULL
+		check (isnumeric([NIP]) = 1),
+    Email varchar(40)  NOT NULL
+		check ([Email] like '*@*.*') 
 );
 
 -- Table: ConferenceDay
