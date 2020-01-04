@@ -108,11 +108,12 @@ CREATE TABLE IndividualClient (
 
 -- Table: Person
 CREATE TABLE Person (
-    PersonID int  NOT NULL,
+    PersonID int identity(1,1) NOT NULL
+		CONSTRAINT Person_pk PRIMARY KEY,
     FirstName varchar(20)  NOT NULL,
     LastName varchar(40)  NOT NULL,
-    Email varchar(30)  NOT NULL,
-    CONSTRAINT Person_pk PRIMARY KEY  (PersonID)
+    Email varchar(40)  NOT NULL
+		check ([Email] like '*@*.*') ,
 );
 
 -- Table: Prices
