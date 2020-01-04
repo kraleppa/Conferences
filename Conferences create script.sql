@@ -60,9 +60,9 @@ CREATE TABLE Conferences (
 
 -- Table: Country
 CREATE TABLE Country (
-    CountryID int  NOT NULL,
+    CountryID int identity(1,1) NOT NULL
+		CONSTRAINT Country_pk PRIMARY KEY,
     Country varchar(50)  NOT NULL,
-    CONSTRAINT Country_pk PRIMARY KEY  (CountryID)
 );
 
 -- Table: DayParticipant
