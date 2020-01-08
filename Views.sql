@@ -70,7 +70,7 @@ select wd.WorkshopName, wd.WorkshopDescription, wd.Price
 	from WorkshopDictionary as wd
 go
 
---wyswietla rezerwacje na konferencje ktore nie zostaly oplacone
+--wyswietla rezerwacje które powinny zostaæ usuniête
 CREATE VIEW view_reservtionOnConferenceToDelete as 
 select r.ResevationID, r.ClientID, dr.NormalTickets, dr.StudentTickets,
 	DATEADD(day, 7, r.ReservationDate) as 'Deadline',
