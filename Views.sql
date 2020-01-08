@@ -67,7 +67,7 @@ go
 
 CREATE VIEW view_workshopDictionary as
 select wd.WorkshopName, wd.WorkshopDescription, wd.Price
-from WorkshopDictionary as wd
+	from WorkshopDictionary as wd
 go
 
 
@@ -85,3 +85,20 @@ from Conferences as c
 where year(c.StartDate) > year(getdate()) 
 	and month(c.StartDate) > month(getdate()) and
 	day(c.StartDate) > day(getdate()) and c.Cancelled = 0
+go
+
+
+--wyswietla rezerwacje które powinny zostaæ usuniête
+CREATE VIEW view_reservtionOnConferenceToDelete as 
+select r.ResevationID, r.ClientID, dr.NormalTickets, dr.StudentTickets,
+	DATEADD(day, 7, r.ReservationDate) as 'Deadline',
+	c.ConferenceID, c.ConferenceName  
+	from Reservation as r
+	inner join DayReservation as dr 
+		on dr.ResevationID = r.ResevationID
+	inner join ConferenceDay as cd 
+		on cd.ConferenceDayID = dr.ConferenceDayID
+	inner join Conferences as c
+		on c.ConferenceID = cd.ConferenceID
+where PaymentDate is null and DATEDIFF(day, DATEADD(day, 7, r.ReservationDate), GETDATE()) > 0
+go
