@@ -102,3 +102,22 @@ select r.ResevationID, r.ClientID, dr.NormalTickets, dr.StudentTickets,
 		on c.ConferenceID = cd.ConferenceID
 where PaymentDate is null and DATEDIFF(day, DATEADD(day, 7, r.ReservationDate), GETDATE()) > 0
 go
+
+
+--firmy, ktore nie uzupelnily wszystkich uczestnikow 2 tygodnie przed konferencja
+CREATE VIEW view_companiesYetToFillEmployees as
+select com.CompanyName, com.NIP, com.Email, cl.Phone
+from Company as com
+	inner join Clients as cl on cl.ClientID = com.ClientID
+	inner join Reservation as r on r.ClientID = cl.ClientID
+	inner join DayReservation as dr on dr.ResevationID = r.ResevationID
+	--left outer join DayParticipant as dp on dr.DayReservationID = dp.DayReservationID 
+		--and dp.PersonID is null
+	inner join ConferenceDay as cd on cd.ConferenceDayID = dr.ConferenceDayID
+	inner join Conferences as c on c.ConferenceID = cd.ConferenceDayID
+where datediff(day, getdate(), c.StartDate) <= 14 and 
+	--dr.NormalTickets + dr.StudentTickets < count(dp.PersonID)
+	(dr.NormalTickets + dr.StudentTickets) < 
+	(select count(dp2.personID)
+		from DayParticipant as dp2
+		where dp2.DayReservationID = dr.DayReservationID)
