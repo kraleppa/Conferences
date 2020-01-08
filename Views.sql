@@ -83,3 +83,18 @@ select r.ResevationID, r.ClientID, dr.NormalTickets, dr.StudentTickets,
 	inner join Conferences as c
 		on c.ConferenceID = cd.ConferenceID
 where PaymentDate is null and DATEDIFF(day, DATEADD(day, 7, r.ReservationDate), GETDATE()) > 0
+go
+
+
+CREATE VIEW view_upcomingWorkshops as
+select w.WorkshopID, wd.WorkshopName, wd.WorkshopDescription, wd.Price,
+	c.ConferenceID, c.ConferenceName, cd.ConferenceDate, w.StartTime, w.EndTime
+	from Workshop as w 
+	inner join WorkshopDictionary as wd
+		on wd.WorkshopDictionaryID = w.WorkshopDictionaryID
+	inner join ConferenceDay as cd
+		on cd.ConferenceDayID = w.ConferenceDayID
+	inner join Conferences as c
+		on c.ConferenceID = cd.ConferenceID
+where (cd.ConferenceDate > GETDATE() and w.Cancelled <> 1)
+go
