@@ -70,6 +70,24 @@ select wd.WorkshopName, wd.WorkshopDescription, wd.Price
 	from WorkshopDictionary as wd
 go
 
+
+--informacje o nadchodzacyh konferencjach
+CREATE VIEW view_conferencesInfo as
+select c.ConferenceName, c.ConferenceDescription, c.limit, c.StartDate, c.EndDate, 
+	c.BuildingNumber,c.street, ci.City, co.Country, 
+	c.BasePrice*(1-p.Discount) as 'Normal ticket price', 
+	c.BasePrice*(1-p.Discount)*(1-c.StudentDiscount) as 'Student ticket price'
+from Conferences as c
+	inner join City as ci on ci.CityID = c.CityID
+	inner join Country as co on co.CountryID = ci.CountryID
+	inner join prices as p on p.ConferenceID = c.ConferenceID and 
+		GETDATE() between p.StartDate and p.EndDate 
+where year(c.StartDate) > year(getdate()) 
+	and month(c.StartDate) > month(getdate()) and
+	day(c.StartDate) > day(getdate()) and c.Cancelled = 0
+go
+
+
 --wyswietla rezerwacje które powinny zostaæ usuniête
 CREATE VIEW view_reservtionOnConferenceToDelete as 
 select r.ResevationID, r.ClientID, dr.NormalTickets, dr.StudentTickets,
