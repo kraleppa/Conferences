@@ -41,3 +41,8 @@ where (cd.ConferenceDate > GETDATE() and w.Cancelled <> 1)
 group by w.WorkshopID, wd.WorkshopName,
 			cd.ConferenceDate, w.StartTime, w.EndTime, w.Limit
 go
+
+CREATE VIEW view_workshopDictionary as
+select wd.WorkshopName, wd.WorkshopDescription, wd.Price
+from WorkshopDictionary as wd
+go
