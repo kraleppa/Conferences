@@ -115,8 +115,8 @@ create function function_participantListForConference(@conf_id int)
 go
 
 
---top X firm, wg aktywnosci (liczba zakupionych biletow)
-create function function_topCompanies(@x int)
+--top X firm wg  zakupionych biletow
+create function function_topCompaniesByTickets(@x int)
 	returns table 
 	as
 	return (
@@ -133,13 +133,26 @@ create function function_topCompanies(@x int)
 				and r.PaymentDate is not null
 			inner join DayReservation as dr 
 				on dr.ResevationID = r.ResevationID
-		
 		group by com.CompanyName
-		order by 2
+		order by 2 desc
 	)
 go
 
 
-
-
+--top x firm wg rezerwacji
+create function function_topCompaniesByReservations(@x int)
+	returns table 
+	as
+	return (
+		select top(@x) com.CompanyName
+		from Company as com
+			inner join Clients as cl 
+				on cl.ClientID = com.ClientID
+			inner join Reservation as r 
+				on r.ClientID = cl.ClientID
+				and r.PaymentDate is not null
+		group by com.CompanyName
+		order by count(r.ResevationID) desc
+)
+go
 
