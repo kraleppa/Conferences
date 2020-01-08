@@ -90,6 +90,7 @@ create function function_participantsOfWorkshop(@WorkshopID int)
 	)
 go
 
+
 --lista uczestnikow konferencji (do identyfikatorow)
 create function function_participantListForConference(@conf_id int)
 	returns table
@@ -111,6 +112,25 @@ create function function_participantListForConference(@conf_id int)
 			inner join Conferences as conf 
 				on conf.ConferenceID = cd.ConferenceID
 		where conf.ConferenceID = @conf_id
+	)
+go
+
+
+--funkcja zwracajaca top X aktywnych klientow indywidualnych (zalezy od ilosci oplaconych rezerwacji)
+create function function_topIndividualClients(@X int)
+	returns table
+	as
+	return (
+		select c.ClientID, p.FirstName, p.LastName, count(r.ResevationID) as 'Number of Reservations'
+		from Clients as c
+			inner join IndividualClient as ic
+				on ic.ClientID = c.ClientID
+			inner join Person as p
+				on p.PersonID = ic.PersonID
+			inner join Reservation as r
+				on r.ClientID = c.ClientID
+		where r.PaymentDate is not null
+		group by c.ClientID, p.FirstName, p.LastName
 	)
 go
 
@@ -155,4 +175,5 @@ create function function_topCompaniesByReservations(@x int)
 		order by count(r.ResevationID) desc
 )
 go
+
 
