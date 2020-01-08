@@ -130,8 +130,10 @@ create function function_topCompanies(@x int)
 				on cl.ClientID = com.ClientID
 			inner join Reservation as r 
 				on r.ClientID = cl.ClientID
+				and r.PaymentDate is not null
 			inner join DayReservation as dr 
 				on dr.ResevationID = r.ResevationID
+		
 		group by com.CompanyName
 		order by 2
 	)
