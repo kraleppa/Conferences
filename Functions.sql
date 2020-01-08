@@ -83,3 +83,30 @@ create function function_participantListForConference(@conf_id int)
 	)
 go
 
+
+--top X firm, wg aktywnosci (liczba zakupionych biletow)
+create function function_topCompanies(@x int)
+	returns table 
+	as
+	return (
+		select top(@x) com.CompanyName, 
+			sum(dr.NormalTickets) 
+			+ 
+			sum(dr.StudentTickets) 
+			as 'Total number of tickets'
+		from Company as com
+			inner join Clients as cl 
+				on cl.ClientID = com.ClientID
+			inner join Reservation as r 
+				on r.ClientID = cl.ClientID
+			inner join DayReservation as dr 
+				on dr.ResevationID = r.ResevationID
+		group by com.CompanyName
+		order by 2
+	)
+go
+
+
+
+
+
