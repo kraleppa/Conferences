@@ -54,6 +54,7 @@ create function function_workshopsDuringConference(@conf_id int)
 	)
 go
 
+
 --zwraca liste uczestnikow danego warsztatu
 create function function_participantsOfWorkshop(@WorkshopID int)
 	returns table	
