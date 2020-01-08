@@ -121,3 +121,19 @@ where datediff(day, getdate(), c.StartDate) <= 14 and
 	(select count(dp2.personID)
 		from DayParticipant as dp2
 		where dp2.DayReservationID = dr.DayReservationID)
+go
+
+
+CREATE VIEW view_upcomingWorkshops as
+select w.WorkshopID, wd.WorkshopName, wd.WorkshopDescription, wd.Price,
+	c.ConferenceID, c.ConferenceName, cd.ConferenceDate, w.StartTime, w.EndTime
+	from Workshop as w 
+	inner join WorkshopDictionary as wd
+		on wd.WorkshopDictionaryID = w.WorkshopDictionaryID
+	inner join ConferenceDay as cd
+		on cd.ConferenceDayID = w.ConferenceDayID
+	inner join Conferences as c
+		on c.ConferenceID = cd.ConferenceID
+where (cd.ConferenceDate > GETDATE() and w.Cancelled <> 1)
+go
+
