@@ -113,3 +113,20 @@ create function function_participantListForConference(@conf_id int)
 	)
 go
 
+
+--funkcja zwracajaca top X aktywnych klientow indywidualnych (zalezy od ilosci oplaconych rezerwacji)
+create function function_topIndividualClients(@X int)
+	returns table
+	as
+	return (
+		select c.ClientID, p.FirstName, p.LastName, count(r.ResevationID) as 'Number of Reservations'
+		from Clients as c
+			inner join IndividualClient as ic
+				on ic.ClientID = c.ClientID
+			inner join Person as p
+				on p.PersonID = ic.PersonID
+			inner join Reservation as r
+				on r.ClientID = c.ClientID
+		where r.PaymentDate is not null
+		group by c.ClientID, p.FirstName, p.LastName,
+	)
