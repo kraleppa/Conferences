@@ -54,6 +54,7 @@ create function function_workshopsDuringConference(@conf_id int)
 	)
 go
 
+
 --zwraca liste uczestnikow danego warsztatu
 create function function_participantsOfWorkshop(@WorkshopID int)
 	returns table	
@@ -128,5 +129,31 @@ create function function_topIndividualClients(@X int)
 			inner join Reservation as r
 				on r.ClientID = c.ClientID
 		where r.PaymentDate is not null
-		group by c.ClientID, p.FirstName, p.LastName,
+		group by c.ClientID, p.FirstName, p.LastName
 	)
+go
+
+--top X firm, wg aktywnosci (liczba zakupionych biletow)
+create function function_topCompanies(@x int)
+	returns table 
+	as
+	return (
+		select top(@x) com.CompanyName, 
+			sum(dr.NormalTickets) 
+			+ 
+			sum(dr.StudentTickets) 
+			as 'Total number of tickets'
+		from Company as com
+			inner join Clients as cl 
+				on cl.ClientID = com.ClientID
+			inner join Reservation as r 
+				on r.ClientID = cl.ClientID
+				and r.PaymentDate is not null
+			inner join DayReservation as dr 
+				on dr.ResevationID = r.ResevationID
+		
+		group by com.CompanyName
+		order by 2
+	)
+go
+
