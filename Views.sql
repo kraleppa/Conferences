@@ -27,7 +27,7 @@ go
 --wyswietla liczbe miejsc zarezerwowanych na nadchodzace warsztaty
 --i calkowity limit miejsc
 CREATE VIEW view_workshopsSeatLimit as 
-select w.WorkshopID, wd.WorkshopName, wd.WorkshopDescription,
+select w.WorkshopID, wd.WorkshopName,
 	cd.ConferenceDate, w.StartTime, w.EndTime, 
 	SUM(wr.NormalTickets) AS 'Booked Places', w.Limit AS 'Total Places'
 from WorkshopDictionary as wd
@@ -38,6 +38,6 @@ from WorkshopDictionary as wd
 	left outer join WorkshopReservation as wr
 		on w.WorkshopID = wr.WorkshopID
 where (cd.ConferenceDate > GETDATE() and w.Cancelled <> 1)
-group by w.WorkshopID, wd.WorkshopName, wd.WorkshopDescription,
+group by w.WorkshopID, wd.WorkshopName,
 			cd.ConferenceDate, w.StartTime, w.EndTime, w.Limit
 go
