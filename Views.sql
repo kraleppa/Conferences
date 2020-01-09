@@ -40,9 +40,9 @@ select c.ConferenceID, c.ConferenceName, c.Limit, cd.ConferenceDate,
 		where dr.ConferenceDayID = cd.ConferenceDayID)) as 'seats left'
 from Conferences as c 
 	inner join ConferenceDay as cd on cd.ConferenceID = c.ConferenceID
-where year(c.StartDate) > year(getdate()) 
-	and month(c.StartDate) > month(getdate()) and
-	day(c.StartDate) > day(getdate()) and c.Cancelled = 0
+where year(c.StartDate) >= year(getdate()) 
+	and month(c.StartDate) >= month(getdate()) and
+	day(c.StartDate) >= day(getdate()) and c.Cancelled = 0
 go
 
 
@@ -82,9 +82,9 @@ from Conferences as c
 	inner join Country as co on co.CountryID = ci.CountryID
 	inner join prices as p on p.ConferenceID = c.ConferenceID and 
 		GETDATE() between p.StartDate and p.EndDate 
-where year(c.StartDate) > year(getdate()) 
-	and month(c.StartDate) > month(getdate()) and
-	day(c.StartDate) > day(getdate()) and c.Cancelled = 0
+where year(c.StartDate) >= year(getdate()) 
+	and month(c.StartDate) >= month(getdate()) and
+	day(c.StartDate) >= day(getdate()) and c.Cancelled = 0
 go
 
 
