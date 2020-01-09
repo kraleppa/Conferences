@@ -1,3 +1,4 @@
+use u_nalepa
 --Functions
 --zwraca liste uczestnikow kazdego dnia konferencji
 CREATE FUNCTION function_partiticipantsOfDayConference(@ConferenceDayID int)
