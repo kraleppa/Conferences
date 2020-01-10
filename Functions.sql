@@ -1,7 +1,7 @@
 use u_nalepa
 --Functions
 --zwraca liste uczestnikow kazdego dnia konferencji
-CREATE FUNCTION function_partiticipantsOfDayConference(@ConferenceDayID int)
+/*CREATE FUNCTION function_partiticipantsOfDayConference(@ConferenceDayID int)
 returns table 
 as
 return(
@@ -173,8 +173,28 @@ create function function_topCompaniesByReservations(@x int)
 				on r.ClientID = cl.ClientID
 				and r.PaymentDate is not null
 		group by com.CompanyName
-		order by count(r.ResevationID) desc
+		order by count(r.ReservationID) desc
 )
 go
+*/
+create function function_returnConferenceDay(@ConferenceID int, @Date date)
+    returns int
+    as
+    begin
+    return (
+        select ConferenceDayID
+        from ConferenceDay
+        where ConferenceID = @ConferenceID and ConferenceDate = @Date
+    )
+    end
+go
 
-
+create function function_returnValueOfWorkshop(@WorkshopDictionaryID int)
+    returns money
+    as
+    begin
+    return (
+        select Price from WorkshopDictionary
+        where WorkshopDictionaryID = @WorkshopDictionaryID
+        )
+    end

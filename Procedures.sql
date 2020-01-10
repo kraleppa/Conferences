@@ -21,61 +21,61 @@ end
 go
 
 
---create procedure procedure_addWorkshop
---	@WorkshopDictionaryID int,
---	@ConferenceDayID int,
---	@StartTime time,--
---	@EndTime time,
---	@Limit int
---as
---begin
---	set nocount on
---	begin try
---		if not exists (
---			select * from ConferenceDay
---			where ConferenceDayID = @ConferenceDayID
---		)
---		begin
---			;throw 52000, 'Conference day does not exist', 1
---		end
+create procedure procedure_addWorkshop
+	@WorkshopDictionaryID int,
+    @Date date,
+    @ConferenceID int,
+	@StartTime time,
+	@EndTime time,
+	@Limit int
+as
+begin
+	set nocount on
+	Declare @ConferenceDayID int = dbo.function_returnConferenceDay(@ConferenceID, @Date);
+	begin try
+		if  (@ConferenceDayID is null)
+		begin
+			;throw 52000, 'Conference day does not exist', 1
+        end
 		
---		if not exists (
---			select * from WorkshopDictionary
---			where WorkshopDictionaryID = @WorkshopDictionaryID
---		)
---		begin 
---			;throw 52000, 'Workshop does not exist in dictionary',1
---		end
---		if (@StartTime > @EndTime)
---		begin 
---			;throw 52000, 'Start time cannot be bigger than End time', 1
---		end
---		Declare @Price money = 0;-- function get price of workshop in dictionary by id
+		if not exists (
+			select * from WorkshopDictionary
+			where WorkshopDictionaryID = @WorkshopDictionaryID
+		)
+		begin
+			;throw 52000, 'Workshop does not exist in dictionary',1
+		end
+		if (@StartTime > @EndTime)
+		begin
+			;throw 52000, 'Start time cannot be bigger than End time', 1
+		end
 
---		insert into Workshop (
---		WorkshopDictionaryID,
---		ConferenceDayID,
---		StartTime,
---		EndTime,
---		Limit,
---		Price
---		)
---		VALUES (
---			@WorkshopDictionaryID,
---			@ConferenceDayID,
---			@StartTime,
---			@EndTime,
---			@Limit,
---			@Price
---		)
---	end try
---	begin catch
---		declare @errorMesasage nvarchar(2048) = 
---		'Cannot add workshop. Error message: ' + ERROR_MESSAGE();
---		;throw 52000, @errorMsg, 1;
---	end catch
---end
---go
+		Declare @Price money = dbo.function_returnValueOfWorkshop(@WorkshopDictionaryID);
+
+	insert into Workshop (
+		WorkshopDictionaryID,
+		ConferenceDayID,
+		StartTime,
+		EndTime,
+		Limit,
+		Price
+		)
+		VALUES (
+			@WorkshopDictionaryID,
+			@ConferenceDayID,
+			@StartTime,
+			@EndTime,
+			@Limit,
+			@Price
+		)
+	end try
+	begin catch
+		declare @errorMessage nvarchar(2048) =
+		'Cannot add workshop. Error message: ' + ERROR_MESSAGE();
+		;throw 52000, @errorMessage, 1;
+	end catch
+end
+go
 
 
 create procedure procedure_addCountry
@@ -227,14 +227,14 @@ begin
 
 		if (@startDate <= getdate())
 			begin
-				;throw 52000, 'Data rozpoczêcia musi byæ pózniejsza ni¿ 
+				;throw 52000, 'Data rozpoczï¿½cia musi byï¿½ pï¿½zniejsza niï¿½ 
 							   dzisiejsza', 1
 			end
 
 		if (@startDate >@endDate)
 			begin
-				;throw 52000, 'Data rozpoczêcia musi byæ pó¿niejsza ni¿
-							   data zakoñczenia', 1
+				;throw 52000, 'Data rozpoczï¿½cia musi byï¿½ pï¿½niejsza niï¿½
+							   data zakoï¿½czenia', 1
 			end
 
 		if not exists (
