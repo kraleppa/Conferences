@@ -1,4 +1,4 @@
-
+use u_nalepa
 -- tables
 -- Table: City
 CREATE TABLE City (
@@ -14,7 +14,7 @@ CREATE TABLE Clients (
     Phone varchar(9)  NOT NULL,
 		check (isnumeric([phone]) = 1),
     Email varchar (50) not null unique,
-		check ([Email] like '*@*.*') ,
+		check ([Email] like '%@%.%') ,
 	Street varchar(50)  NOT NULL,
 	BuildingNumber varchar(10) NOT NULL,
     CityID int  NOT NULL,

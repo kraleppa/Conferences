@@ -227,7 +227,7 @@ begin
 							   dzisiejsza', 1
 			end
 
-		if (@startDate >@endDate)
+		if (@startDate > @endDate)
 			begin
 				;throw 52000, 'Data rozpocz�cia musi by� p�niejsza ni�
 							   data zako�czenia', 1
@@ -427,3 +427,95 @@ begin
 
 end
 go
+
+create procedure procedure_addCompany
+	@Phone varchar(9),
+	@Street varchar(50),
+	@CityName varchar(50),
+	@Country varchar(50),
+	@BuildingNumber varchar(10),
+	@Email varchar(50),
+	@Nip varchar(50),
+	@CompanyName varchar(50)
+
+as
+begin
+	set nocount on
+	begin try 
+		if (
+			@Phone is null or 
+			@Street is null or
+			@CityName is null or
+			@BuildingNumber is null or
+			@Email is null or
+			@Nip is null or
+			@CompanyName is null
+		)
+		begin
+			;throw 52000, 'Podaj wszystkie parametry', 1
+		end
+		if exists(
+			select * from Clients
+			where Email like @Email
+		)
+		begin
+			;throw 52000, 'Adres email jest juz wykorzystany',1 
+		end
+
+		if not exists (
+			select * 
+			from City
+			where City = @CityName
+		)
+		begin
+			exec procedure_addCity @CityName, @Country
+		end
+
+		insert into Clients (
+			Phone,
+			Street,
+			BuildingNumber,
+			CityID,
+			Email
+		)
+		values (
+			@Phone,
+			@Street,
+			@BuildingNumber,
+			(
+				select CityID
+				from City
+				where city = @cityName
+			),
+			@Email
+		)
+
+		declare @ClientID int
+		set @ClientID = @@identity
+
+		insert into Company (
+			ClientID,
+			CompanyName,
+			NIP
+		)
+		values(
+			@ClientID,
+			@CompanyName,
+			@Nip
+		)
+	end try
+	begin catch 
+		declare @errorMessage nvarchar(2048)
+			= 'Cannot add CompanyClient. Error message: '
+			+ error_message();
+		;throw 52000, @errorMessage, 1
+	end catch
+end
+go
+
+
+
+			
+
+
+	
