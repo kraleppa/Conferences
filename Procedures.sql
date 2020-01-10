@@ -4,8 +4,8 @@ create procedure procedure_addWorkshopToDictionary
 	@WorkshopName varchar(50),
 	@WorkshopDescription varchar(255),
 	@Price money
-as 
-begin 
+as
+begin
 	set nocount on
 	insert into WorkshopDictionary (
 		WorkshopName,
@@ -19,7 +19,6 @@ begin
 	)
 end
 go
-
 
 --create procedure procedure_addWorkshop
 --	@WorkshopDictionaryID int,
@@ -76,6 +75,63 @@ go
 --	end catch
 --end
 --go
+
+
+create procedure procedure_addWorkshop
+	@WorkshopDictionaryID int,
+    @Date date,
+    @ConferenceID int,
+	@StartTime time,
+	@EndTime time,
+	@Limit int
+as
+begin
+	set nocount on
+	Declare @ConferenceDayID int = dbo.function_returnConferenceDay(@ConferenceID, @Date);
+	begin try
+		if  (@ConferenceDayID is null)
+		begin
+			;throw 52000, 'Conference day does not exist', 1
+        end
+
+		if not exists (
+			select * from WorkshopDictionary
+			where WorkshopDictionaryID = @WorkshopDictionaryID
+		)
+		begin
+			;throw 52000, 'Workshop does not exist in dictionary',1
+		end
+		if (@StartTime > @EndTime)
+		begin
+			;throw 52000, 'Start time cannot be bigger than End time', 1
+		end
+
+		Declare @Price money = dbo.function_returnValueOfWorkshop(@WorkshopDictionaryID);
+
+	insert into Workshop (
+		WorkshopDictionaryID,
+		ConferenceDayID,
+		StartTime,
+		EndTime,
+		Limit,
+		Price
+		)
+		VALUES (
+			@WorkshopDictionaryID,
+			@ConferenceDayID,
+			@StartTime,
+			@EndTime,
+			@Limit,
+			@Price
+		)
+	end try
+	begin catch
+		declare @errorMessage nvarchar(2048) =
+		'Cannot add workshop. Error message: ' + ERROR_MESSAGE();
+		;throw 52000, @errorMessage, 1;
+	end catch
+end
+go
 
 
 create procedure procedure_addCountry
@@ -237,9 +293,9 @@ begin
 							   data zakoñczenia', 1
 			end
 
-		if(@studentDiscount < 0)
+		if(@studentDiscount < 0 or @studentDiscount > 1)
 			begin
-				;throw 52000, 'Zni¿ka nie mo¿e byæ ujemna', 1
+				;throw 52000, 'Zni¿ka musi byæ z przedzia³u [0,1]', 1
 			end
 
 		if not exists (
@@ -277,13 +333,14 @@ begin
 				@startDate,
 				@endDate,
 				(
-				 select CityID
-				 from City
-				 where city = @cityName and
-				CountryID = (
-					select CountryID
-					from Country
-					where Country = @countryName
+					 select CityID
+					 from City
+					 where city = @cityName and
+						CountryID = (
+						select CountryID
+						from Country
+						where Country = @countryName
+					)
 				),
 				@street,
 				@buildingNumber,
@@ -495,7 +552,7 @@ begin
 				;throw 52000, 'Adres email jest ju¿ wykorzystany', 1
 			end
 
-		insert into Clients (
+			insert into Clients (
 			Phone,
 			Street,
 			BuildingNumber,
@@ -570,3 +627,99 @@ begin
 	end catch
 end
 go
+
+
+create procedure procedure_addCompany
+	@Phone varchar(9),
+	@Street varchar(50),
+	@CityName varchar(50),
+	@Country varchar(50),
+	@BuildingNumber varchar(10),
+	@Email varchar(50),
+	@Nip varchar(50),
+	@CompanyName varchar(50)
+as
+begin
+	set nocount on
+	begin try 
+		if (
+			@Phone is null or 
+			@Street is null or
+			@CityName is null or
+			@BuildingNumber is null or
+			@Email is null or
+			@Nip is null or
+			@CompanyName is null
+		)
+			begin
+				;throw 52000, 'Podaj wszystkie parametry', 1
+			end
+		if exists(
+			select * from Clients
+			where Email like @Email
+		)
+			begin
+				;throw 52000, 'Adres email jest juz wykorzystany',1 
+			end
+
+		if not exists (
+			select * 
+			from City
+			where City = @CityName  and
+				CountryID = (
+					select CountryID
+					from Country
+					where Country = @Country	
+				)
+		)
+			begin
+				exec procedure_addCity @CityName, @Country
+			end
+
+		insert into Clients (
+			Phone,
+			Street,
+			BuildingNumber,
+			CityID,
+			Email
+		)
+		values (
+			@Phone,
+			@Street,
+			@BuildingNumber,
+			(
+				select CityID
+				from City
+				where city = @cityName and
+				CountryID = (
+					select CountryID
+					from Country
+					where Country = @Country	
+				)
+			),
+			@Email
+		)
+
+		declare @ClientID int
+		set @ClientID = @@identity
+
+		insert into Company (
+			ClientID,
+			CompanyName,
+			NIP
+		)
+		values(
+			@ClientID,
+			@CompanyName,
+			@Nip
+		)
+	end try
+	begin catch 
+		declare @errorMessage nvarchar(2048)
+			= 'Cannot add CompanyClient. Error message: '
+			+ error_message();
+		;throw 52000, @errorMessage, 1
+	end catch
+end
+go
+
