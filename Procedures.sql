@@ -1,11 +1,9 @@
---Procedures
-
 create procedure procedure_addWorkshopToDictionary
 	@WorkshopName varchar(50),
 	@WorkshopDescription varchar(255),
 	@Price money
-as 
-begin 
+as
+begin
 	set nocount on
 	insert into WorkshopDictionary (
 		WorkshopName,
@@ -19,7 +17,6 @@ begin
 	)
 end
 go
-
 
 create procedure procedure_addWorkshop
 	@WorkshopDictionaryID int,
@@ -37,7 +34,7 @@ begin
 		begin
 			;throw 52000, 'Conference day does not exist', 1
         end
-		
+
 		if not exists (
 			select * from WorkshopDictionary
 			where WorkshopDictionaryID = @WorkshopDictionaryID
@@ -76,7 +73,6 @@ begin
 	end catch
 end
 go
-
 
 create procedure procedure_addCountry
 	@countryName varchar(50)
@@ -237,6 +233,11 @@ begin
 							   data zako�czenia', 1
 			end
 
+		if(@studentDiscount < 0)
+			begin
+				;throw 52000, 'Zni�ka nie mo�e by� ujemna', 1
+			end
+
 		if not exists (
 			select * 
 			from City
@@ -304,4 +305,125 @@ end
 go
 
 
+create procedure procedure_addPriceThreshold
+	@conferenceID int,
+	@startDate date,
+	@endDate date,
+	@discount real
+as
+begin
+	set nocount on
+	begin try
+		if (@conferenceID is null or
+			@startDate is null or
+			@endDate is null or
+			@discount is null
+		)
+			begin
+				;throw 52000, 'Podaj wszystkie parametry', 1
+			end
 
+		if(@startDate > @endDate)
+			begin
+				;throw 52000, 'Data rozpocz�cia musi by� 
+							   p�zniejsza ni� data zako�czenia', 1
+			end
+
+		if not exists (
+			select *
+			from Conferences
+			where conferenceID = @conferenceID
+		)
+			begin
+				;throw 52000, 'Nie ma takiej konferencji', 1
+			end
+
+		declare @sd date = (
+				select StartDate
+				from Conferences
+				where ConferenceID = @conferenceID
+			)
+
+		if(@startDate > @sd or @endDate > @sd)
+			begin
+				;throw 52000, 'Daty progu musz� by� przed 
+							   dat� konferencji', 1
+			end
+
+		--if exists (
+		--	select * 
+		--	from Prices
+		--	where ConferenceID = @conferenceID
+		--)
+		--	begin
+		--		for w as
+		--			select StartDate, EndDate
+		--			from Prices
+		--			where ConferenceID = @conferenceID
+		--		do
+		--			if(1 > 2)
+		--				begin
+		--					;throw 52000, 'Daty progu musz� by� przed 
+		--					   dat� konferencji', 1
+		--				end
+		--		end for
+					
+		--	end
+
+		insert into Prices (
+			ConferenceID,
+			StartDate,
+			EndDate,
+			Discount
+		)
+		values (
+			@conferenceID,
+			@startDate,
+			@endDate,
+			@discount
+		)
+	end try
+
+	begin catch 
+		declare @errorMsg nvarchar(2048)
+			= 'Cannot add price treshold. Error message: '
+			+ error_message();
+		;throw 52000, @errorMsg, 1
+	end catch
+end 
+go
+
+
+create procedure procedure_deletePriceTreshold
+	@priceID int
+as
+begin
+	set nocount on
+	begin try
+		if(@priceID is null)
+			begin
+				;throw 52000, 'Podaj ID progu cenowego', 1
+			end
+
+		if not exists (
+			select * 
+			from Prices
+			where PriceID = @priceID
+		)
+			begin
+				;throw 52000, 'Podany pr�g cenowy nie istnieje.', 1
+			end
+
+		delete Prices	
+			where PriceID = @priceID
+	end try
+
+	begin catch 
+		declare @errorMsg nvarchar(2048)
+			= 'Cannot elete price treshold. Error message: '
+			+ error_message();
+		;throw 52000, @errorMsg, 1
+	end catch
+
+end
+go
