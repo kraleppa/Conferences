@@ -245,7 +245,12 @@ begin
 		if not exists (
 			select * 
 			from City
-			where City = @cityName
+			where City = @cityName and
+				CountryID = (
+					select CountryID
+					from Country
+					where Country = @countryName
+				)
 		)
 			begin
 				exec procedure_addCity
@@ -274,7 +279,11 @@ begin
 				(
 				 select CityID
 				 from City
-				 where city = @cityName
+				 where city = @cityName and
+				CountryID = (
+					select CountryID
+					from Country
+					where Country = @countryName
 				),
 				@street,
 				@buildingNumber,
@@ -309,8 +318,85 @@ end
 go
 
 
-create procedure procedure_addPriceThreshold	@conferenceID int,	@startDate date,	@endDate date,	@discount realasbegin	set nocount on	begin try		if (@conferenceID is null or			@startDate is null or			@endDate is null or			@discount is null		)			begin				;throw 52000, 'Podaj wszystkie parametry', 1			end		if(@startDate > @endDate)			begin				;throw 52000, 'Data rozpoczêcia musi byæ 							   pózniejsza ni¿ data zakoñczenia', 1			end		if not exists (			select *			from Conferences			where conferenceID = @conferenceID		)			begin
-				;throw 52000, 'Nie ma takiej konferencji', 1			end		declare @sd date = (				select StartDate				from Conferences				where ConferenceID = @conferenceID			)		if(@startDate > @sd or @endDate > @sd)			begin				;throw 52000, 'Daty progu musz¹ byæ przed 							   dat¹ konferencji', 1			end		--if exists (		--	select * 		--	from Prices		--	where ConferenceID = @conferenceID		--)		--	begin		--		for w as		--			select StartDate, EndDate		--			from Prices		--			where ConferenceID = @conferenceID		--		do		--			if(1 > 2)		--				begin		--					;throw 52000, 'Daty progu musz¹ byæ przed 		--					   dat¹ konferencji', 1		--				end		--		end for							--	end		insert into Prices (			ConferenceID,			StartDate,			EndDate,			Discount		)		values (			@conferenceID,			@startDate,			@endDate,			@discount		)	end try
+create procedure procedure_addPriceThreshold
+	@conferenceID int,
+	@startDate date,
+	@endDate date,
+	@discount real
+as
+begin
+	set nocount on
+	begin try
+		if (@conferenceID is null or
+			@startDate is null or
+			@endDate is null or
+			@discount is null
+		)
+			begin
+				;throw 52000, 'Podaj wszystkie parametry', 1
+			end
+
+		if(@startDate > @endDate)
+			begin
+				;throw 52000, 'Data rozpoczêcia musi byæ 
+							   pózniejsza ni¿ data zakoñczenia', 1
+			end
+
+		if not exists (
+			select *
+			from Conferences
+			where conferenceID = @conferenceID
+		)
+			begin
+				;throw 52000, 'Nie ma takiej konferencji', 1
+			end
+
+		declare @sd date = (
+				select StartDate
+				from Conferences
+				where ConferenceID = @conferenceID
+			)
+
+		if(@startDate > @sd or @endDate > @sd)
+			begin
+				;throw 52000, 'Daty progu musz¹ byæ przed 
+							   dat¹ konferencji', 1
+			end
+
+		--if exists (
+		--	select * 
+		--	from Prices
+		--	where ConferenceID = @conferenceID
+		--)
+		--	begin
+		--		for w as
+		--			select StartDate, EndDate
+		--			from Prices
+		--			where ConferenceID = @conferenceID
+		--		do
+		--			if(1 > 2)
+		--				begin
+		--					;throw 52000, 'Daty progu musz¹ byæ przed 
+		--					   dat¹ konferencji', 1
+		--				end
+		--		end for
+					
+		--	end
+
+		insert into Prices (
+			ConferenceID,
+			StartDate,
+			EndDate,
+			Discount
+		)
+		values (
+			@conferenceID,
+			@startDate,
+			@endDate,
+			@discount
+		)
+	end try
+
 	begin catch 
 		declare @errorMsg nvarchar(2048)
 			= 'Cannot add price treshold. Error message: '
@@ -356,3 +442,131 @@ end
 go
 
 
+create procedure procedure_addIndividualClient
+	@phone varchar(9),
+	@street varchar(50),
+	@buildingNumber varchar(10),
+	@cityName varchar(50),
+	@countryName varchar(50),
+	@email varchar(50),
+	@firstName varchar(50),
+	@lastName varchar(50),
+	@studnetCardID varchar(50)
+as
+begin
+	set nocount on
+	begin try
+		if (@phone is null or
+			@street is null or
+			@buildingNumber is null or
+			@cityName is null or
+			@countryName is null or
+			@email is null or
+			@firstName is null or
+			@lastName is null
+		)
+			begin
+				;throw 52000, 'Podaj wszystkie dane 
+							   (nr legitymacji jest opcjonalny).', 1
+			end
+
+		if not exists (
+			select * 
+			from city
+			where city = @cityName and
+				CountryID = (
+					select CountryID
+					from Country
+					where Country = @countryName
+				)
+		)
+			begin
+				exec procedure_addCity
+						@cityName,
+						@countryName
+			end
+
+		if exists (
+			select * 
+			from Clients
+			where Email = @email
+		)
+			begin
+				;throw 52000, 'Adres email jest ju¿ wykorzystany', 1
+			end
+
+		insert into Clients (
+			Phone,
+			Street,
+			BuildingNumber,
+			CityID,
+			Email
+		)
+		values (
+			@phone,
+			@street,
+			@buildingNumber,
+			(
+				select CityID 
+				from City
+				where City = @cityName and
+				CountryID = (
+					select CountryID
+					from Country
+					where Country = @countryName	
+				)
+			),
+			@email
+		)
+
+		declare @clientID int
+		set @clientID = @@identity
+
+		insert into Person default values
+		declare @personID int
+		set @personID = @@identity
+
+
+		insert into IndividualClient (
+			ClientID,
+			PersonID,
+			FirstName,
+			LastName
+		)
+		values (
+			@clientID,
+			@personID,
+			@firstName,
+			@lastName
+		)
+
+		if(@studnetCardID is not null)
+			begin
+				if exists (
+					select * 
+					from Student
+					where StudentCardID = @studnetCardID
+				)
+					begin
+						;throw 52000, 'Ten numer legitymacji istnieje ju¿ w bazie', 1
+					end
+
+				insert into Student (
+					StudentCardID,
+					PersonID
+				)
+				values (
+					@studnetCardID,
+					@personID
+				)
+			end
+	end try
+
+	begin catch 
+		declare @errorMsg nvarchar(2048)
+			= 'Cannot add individual client. Error message: '
+			+ error_message();
+		;throw 52000, @errorMsg, 1
+	end catch
+end
+go
