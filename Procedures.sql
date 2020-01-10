@@ -237,6 +237,11 @@ begin
 							   data zakoñczenia', 1
 			end
 
+		if(@studentDiscount < 0)
+			begin
+				;throw 52000, 'Zni¿ka nie mo¿e byæ ujemna', 1
+			end
+
 		if not exists (
 			select * 
 			from City
@@ -303,5 +308,51 @@ begin
 end
 go
 
+
+create procedure procedure_addPriceThreshold	@conferenceID int,	@startDate date,	@endDate date,	@discount realasbegin	set nocount on	begin try		if (@conferenceID is null or			@startDate is null or			@endDate is null or			@discount is null		)			begin				;throw 52000, 'Podaj wszystkie parametry', 1			end		if(@startDate > @endDate)			begin				;throw 52000, 'Data rozpoczêcia musi byæ 							   pózniejsza ni¿ data zakoñczenia', 1			end		if not exists (			select *			from Conferences			where conferenceID = @conferenceID		)			begin
+				;throw 52000, 'Nie ma takiej konferencji', 1			end		declare @sd date = (				select StartDate				from Conferences				where ConferenceID = @conferenceID			)		if(@startDate > @sd or @endDate > @sd)			begin				;throw 52000, 'Daty progu musz¹ byæ przed 							   dat¹ konferencji', 1			end		--if exists (		--	select * 		--	from Prices		--	where ConferenceID = @conferenceID		--)		--	begin		--		for w as		--			select StartDate, EndDate		--			from Prices		--			where ConferenceID = @conferenceID		--		do		--			if(1 > 2)		--				begin		--					;throw 52000, 'Daty progu musz¹ byæ przed 		--					   dat¹ konferencji', 1		--				end		--		end for							--	end		insert into Prices (			ConferenceID,			StartDate,			EndDate,			Discount		)		values (			@conferenceID,			@startDate,			@endDate,			@discount		)	end try
+	begin catch 
+		declare @errorMsg nvarchar(2048)
+			= 'Cannot add price treshold. Error message: '
+			+ error_message();
+		;throw 52000, @errorMsg, 1
+	end catch
+end 
+go
+
+
+create procedure procedure_deletePriceTreshold
+	@priceID int
+as
+begin
+	set nocount on
+	begin try
+		if(@priceID is null)
+			begin
+				;throw 52000, 'Podaj ID progu cenowego', 1
+			end
+
+		if not exists (
+			select * 
+			from Prices
+			where PriceID = @priceID
+		)
+			begin
+				;throw 52000, 'Podany próg cenowy nie istnieje.', 1
+			end
+
+		delete Prices	
+			where PriceID = @priceID
+	end try
+
+	begin catch 
+		declare @errorMsg nvarchar(2048)
+			= 'Cannot elete price treshold. Error message: '
+			+ error_message();
+		;throw 52000, @errorMsg, 1
+	end catch
+
+end
+go
 
 
