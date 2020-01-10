@@ -2,7 +2,7 @@
 -- tables
 -- Table: City
 CREATE TABLE City (
-    CityID int  NOT NULL,
+    CityID int identity(1,1) NOT NULL,
     CountryID int  NOT NULL,
     City varchar(50)  NOT NULL,
     CONSTRAINT City_pk PRIMARY KEY  (CityID)
@@ -10,26 +10,29 @@ CREATE TABLE City (
 
 -- Table: Clients
 CREATE TABLE Clients (
-    ClientID int  NOT NULL,
+    ClientID int identity(1,1)  NOT NULL,
     Phone varchar(9)  NOT NULL,
-    Street varchar(50)  NOT NULL,
-    PostalCode varchar(10)  NOT NULL,
+		check (isnumeric([phone]) = 1),
+    Email varchar (50) not null unique,
+		check ([Email] like '*@*.*') ,
+	Street varchar(50)  NOT NULL,
+	BuildingNumber varchar(10) NOT NULL,
     CityID int  NOT NULL,
     CONSTRAINT Clients_pk PRIMARY KEY  (ClientID)
 );
 
 -- Table: Company
 CREATE TABLE Company (
-    ClientID int  NOT NULL,
+    ClientID int NOT NULL,
     CompanyName varchar(50)  NOT NULL,
-    NIP int  NOT NULL,
-    Email varchar(30)  NOT NULL,
+    NIP varchar(50) NOT NULL unique, 
+		check (isnumeric([NIP]) = 1),
     CONSTRAINT Company_pk PRIMARY KEY  (ClientID)
 );
 
 -- Table: ConferenceDay
 CREATE TABLE ConferenceDay (
-    ConferenceDayID int  NOT NULL,
+    ConferenceDayID int identity (1,1) NOT NULL,
     ConferenceID int  NOT NULL,
     ConferenceDate date  NOT NULL,
     CONSTRAINT ConferenceDay_pk PRIMARY KEY  (ConferenceDayID)
@@ -37,31 +40,34 @@ CREATE TABLE ConferenceDay (
 
 -- Table: Conferences
 CREATE TABLE Conferences (
-    ConferenceID int  NOT NULL,
+    ConferenceID int identity (1,1) NOT NULL,
     ConferenceName varchar(50)  NOT NULL,
     ConferenceDescription varchar(255)  NOT NULL,
     StartDate date  NOT NULL,
     EndDate date  NOT NULL,
+		check([EndDate] > [StartDate]),
     CityID int  NOT NULL,
     Street varchar(50)  NOT NULL,
-    BuildingNumber int  NOT NULL,
-    StudentDiscount real  NOT NULL,
+    BuildingNumber varchar(10)  NOT NULL,
+    StudentDiscount real NULL default 0,
     Limit int  NOT NULL,
-    Cancelled bit  NOT NULL,
+		check([Limit] > 0),
+    Cancelled bit  NULL default 0,
     BasePrice money  NOT NULL,
+		check([BasePrice] > 0),
     CONSTRAINT Conferences_pk PRIMARY KEY  (ConferenceID)
 );
 
 -- Table: Country
 CREATE TABLE Country (
-    CountryID int  NOT NULL,
+    CountryID int identity(1,1) NOT NULL,
     Country varchar(50)  NOT NULL,
     CONSTRAINT Country_pk PRIMARY KEY  (CountryID)
 );
 
 -- Table: DayParticipant
 CREATE TABLE DayParticipant (
-    DayParticipantID int  NOT NULL,
+    DayParticipantID int identity(1,1) NOT NULL,
     PersonID int  NOT NULL,
     DayReservationID int  NOT NULL,
     CONSTRAINT DayParticipant_pk PRIMARY KEY  (DayParticipantID)
@@ -69,11 +75,14 @@ CREATE TABLE DayParticipant (
 
 -- Table: DayReservation
 CREATE TABLE DayReservation (
-    DayReservationID int  NOT NULL,
+    DayReservationID int identity(1,1) NOT NULL,
     ConferenceDayID int  NOT NULL,
-    ResevationID int  NOT NULL,
-    NormalTickets int  NOT NULL,
-    StudentTickets int  NULL,
+    ReservationID int  NOT NULL,
+    NormalTickets int  NULL default 0,
+		check([NormalTickets] >= 0),
+    StudentTickets int  NULL default 0,
+		check([NormalTickets] >= 0),
+	check([NormalTickets] + [StudentTickets] > 0),
     CONSTRAINT DayReservation_pk PRIMARY KEY  (DayReservationID)
 );
 
@@ -81,8 +90,8 @@ CREATE TABLE DayReservation (
 CREATE TABLE Employee (
     ClientID int  NOT NULL,
     PersonID int  NOT NULL,
-    FirstName varchar(20)  NULL,
-    LastName varchar(40)  NULL,
+    FirstName varchar(50)  NULL,
+    LastName varchar(50)  NULL,
     CONSTRAINT Employee_pk PRIMARY KEY  (PersonID)
 );
 
@@ -90,63 +99,67 @@ CREATE TABLE Employee (
 CREATE TABLE IndividualClient (
     ClientID int  NOT NULL,
     PersonID int unique NOT NULL,
-    FirstName varchar(20)  NOT NULL,
-    LastName varchar(40)  NOT NULL,
+    FirstName varchar(50)  NOT NULL,
+    LastName varchar(50)  NOT NULL,
     CONSTRAINT IndividualClient_pk PRIMARY KEY  (ClientID)
 );
 
 -- Table: Person
 CREATE TABLE Person (
-    PersonID int  NOT NULL,
+    PersonID int identity(1,1) NOT NULL,
     CONSTRAINT Person_pk PRIMARY KEY  (PersonID)
 );
 
 -- Table: Prices
 CREATE TABLE Prices (
-    PriceID int  NOT NULL,
+    PriceID int identity(1,1) NOT NULL,
     ConferenceID int  NOT NULL,
     StartDate date  NOT NULL,
     EndDate date  NOT NULL,
+	check([EndDate] >= [StartDate]),
     Discount real  NOT NULL,
+		check([Discount] > 0),
     CONSTRAINT Prices_pk PRIMARY KEY  (PriceID)
 );
 
--- Table: Resvervation
-CREATE TABLE Resvervation (
-    ResevationID int  NOT NULL,
+-- Table: Reservation
+CREATE TABLE Reservation (
+    ReservationID int identity(1,1) NOT NULL,
     ClientID int  NOT NULL,
     PaymentDate date  NULL,
     ReservationDate date  NOT NULL,
-    CONSTRAINT Resvervation_pk PRIMARY KEY  (ResevationID)
+    CONSTRAINT Reservation_pk PRIMARY KEY  (ReservationID)
 );
 
 -- Table: Student
 CREATE TABLE Student (
-    StudentID int  NOT NULL,
-    StudentCardID int unique NOT NULL,
+    StudentID int identity(1,1) NOT NULL,
+    StudentCardID varchar(50) unique NOT NULL,
     PersonID int unique NOT NULL,
     CONSTRAINT Student_pk PRIMARY KEY  (StudentID)
 );
 
 -- Table: Workshop
 CREATE TABLE Workshop (
-    WorkshopID int  NOT NULL,
+    WorkshopID int identity(1,1) NOT NULL,
     WorkshopDictionaryID int  NOT NULL,
     ConferenceDayID int  NOT NULL,
     StartTime time  NOT NULL,
     EndTime time  NOT NULL,
+		check([EndTime] > [StartTime]),
     Limit int  NOT NULL,
-    Cancelled bit  NOT NULL,
-    Price money  NULL,
+		check([Limit] > 0),
+    Cancelled bit  NULL default 0,
+    Price money  NULL default 0,
     CONSTRAINT Workshop_pk PRIMARY KEY  (WorkshopID)
 );
 
 -- Table: WorkshopDictionary
 CREATE TABLE WorkshopDictionary (
-    WorkshopDictionaryID int  NOT NULL,
+    WorkshopDictionaryID int identity (1,1)  NOT NULL,
     WorkshopName varchar(50)  NOT NULL,
     WorkshopDescription varchar(255)  NOT NULL,
-    Price money  NULL,
+    Price money  NULL default 0,
     CONSTRAINT WorkshopDictionary_pk PRIMARY KEY  (WorkshopDictionaryID)
 );
 
@@ -159,10 +172,11 @@ CREATE TABLE WorkshopParticipant (
 
 -- Table: WorkshopReservation
 CREATE TABLE WorkshopReservation (
-    WorkshopReservationID int  NOT NULL,
+    WorkshopReservationID int identity(1,1) NOT NULL,
     WorkshopID int  NOT NULL,
     DayReservationID int  NOT NULL,
-    NormalTickets int  NOT NULL,
+    Tickets int  NOT NULL,
+		check ([Tickets] > 0),
     CONSTRAINT WorkshopReservation_pk PRIMARY KEY  (WorkshopReservationID)
 );
 
@@ -207,10 +221,10 @@ ALTER TABLE DayReservation ADD CONSTRAINT DayReservation_ConferenceDay
     FOREIGN KEY (ConferenceDayID)
     REFERENCES ConferenceDay (ConferenceDayID);
 
--- Reference: DayReservation_Resvervation (table: DayReservation)
-ALTER TABLE DayReservation ADD CONSTRAINT DayReservation_Resvervation
-    FOREIGN KEY (ResevationID)
-    REFERENCES Resvervation (ResevationID);
+-- Reference: DayReservation_Reservation (table: DayReservation)
+ALTER TABLE DayReservation ADD CONSTRAINT DayReservation_Reservation
+    FOREIGN KEY (ReservationID)
+    REFERENCES Reservation (ReservationID);
 
 -- Reference: Employee_Company (table: Employee)
 ALTER TABLE Employee ADD CONSTRAINT Employee_Company
@@ -237,8 +251,8 @@ ALTER TABLE Prices ADD CONSTRAINT Prices_Conferences
     FOREIGN KEY (ConferenceID)
     REFERENCES Conferences (ConferenceID);
 
--- Reference: Resvervation_Clients (table: Resvervation)
-ALTER TABLE Resvervation ADD CONSTRAINT Resvervation_Clients
+-- Reference: Reservation_Clients (table: Reservation)
+ALTER TABLE Reservation ADD CONSTRAINT Reservation_Clients
     FOREIGN KEY (ClientID)
     REFERENCES Clients (ClientID);
 
