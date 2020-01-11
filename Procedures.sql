@@ -393,10 +393,20 @@ begin
 				;throw 52000, 'Podaj wszystkie parametry', 1
 			end
 
+		if(@discount <= 0 or @discount >= 1)
+			begin
+				;throw 52000, 'Zni¿ka musi byæ z przedzia³u (0,1)', 1
+			end
+
 		if(@startDate > @endDate)
 			begin
 				;throw 52000, 'Data rozpoczêcia musi byæ 
 							   pózniejsza ni¿ data zakoñczenia', 1
+			end
+
+		if(@startDate < getdate())
+			begin
+				;throw 52000, 'Nie mo¿esz ustaliæ progu w przesz³oœci', 1
 			end
 
 		if not exists (
@@ -408,37 +418,30 @@ begin
 				;throw 52000, 'Nie ma takiej konferencji', 1
 			end
 
-		declare @sd date = (
+		if(@endDate > (
 				select StartDate
 				from Conferences
 				where ConferenceID = @conferenceID
 			)
-
-		if(@startDate > @sd or @endDate > @sd)
+		)
 			begin
 				;throw 52000, 'Daty progu musz¹ byæ przed 
 							   dat¹ konferencji', 1
 			end
 
-		--if exists (
-		--	select * 
-		--	from Prices
-		--	where ConferenceID = @conferenceID
-		--)
-		--	begin
-		--		for w as
-		--			select StartDate, EndDate
-		--			from Prices
-		--			where ConferenceID = @conferenceID
-		--		do
-		--			if(1 > 2)
-		--				begin
-		--					;throw 52000, 'Daty progu musz¹ byæ przed 
-		--					   dat¹ konferencji', 1
-		--				end
-		--		end for
-					
-		--	end
+		if(0 < ( 
+				select count(PriceID)
+				from Prices
+				where ConferenceID = @conferenceID and (
+					(StartDate <= @endDate and @endDate <= EndDate)
+					or (StartDate <= @startDate and @startDate <= EndDate)
+				)
+			)
+		)
+			begin
+				;throw 52000, 'Konferencja ma ju¿ próg cenowy 
+					zawieraj¹cy czêœæ tego okresu', 1;
+			end
 
 		insert into Prices (
 			ConferenceID,
