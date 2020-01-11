@@ -198,3 +198,20 @@ create function function_returnValueOfWorkshop(@WorkshopDictionaryID int)
         where WorkshopDictionaryID = @WorkshopDictionaryID
         )
     end
+go 
+
+create function function_returnPersonID(@ReservationID int)
+	returns int
+	as
+	begin
+	return (
+			select p.PersonID from Clients as c
+			inner join IndividualClient as id 
+				on id.ClientID = c.ClientID
+			inner join Person as p 
+				on id.PersonID = p.PersonID
+			where (select ClientID from Reservation as r
+					where ReservationID = @ReservationID) = c.ClientID
+		)
+	end
+go
