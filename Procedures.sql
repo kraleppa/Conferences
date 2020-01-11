@@ -814,3 +814,43 @@ begin
 end
 go
 
+
+create procedure procedure_addEmployee
+	@personID int,
+	@firstName varchar(50),
+	@lastName varchar(50)	
+as
+begin
+	set nocount on
+	begin try
+		
+		if (@personID is null or
+			@firstName is null or
+			@lastName is null
+		)
+			begin
+				;throw 52000, 'Podaj wszystkie dane', 1
+			end
+	
+		if not exists (
+			select * 
+			from Employee
+			where PersonID = @personID
+		)
+			begin
+				;throw 52000, 'Osoba o tym ID nie istnieje', 1
+			end
+
+		update Employee
+		set FirstName = @firstName, LastName = @lastName
+		where PersonID = @personID
+
+
+	end try
+	begin catch 
+		declare @errorMessage nvarchar(2048)
+			= 'Cannot add employee. Error message: '
+			+ error_message();
+		;throw 52000, @errorMessage, 1
+	end catch
+end
