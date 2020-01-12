@@ -671,7 +671,7 @@ end
 go
 
 
-create procedure procedure_addIndividualReservation 
+create procedure procedure_addConferenceReservation 
 	@ClientID int
 as
 begin
@@ -813,6 +813,124 @@ begin
 	end catch
 end
 go
+
+create procedure procedure_addCompanyDayReservation
+	@ReservationID int,
+	@ConferenceID int,
+	@Date date,
+	@NormalTickets int,
+	@StudentTickets int
+as
+begin
+	set nocount on
+	begin try
+		if (
+			@ReservationID is null or
+			@ConferenceID is null or
+			@Date is null or 
+			@NormalTickets is null or 
+			@StudentTickets is null
+		)
+		begin
+			;throw 52000, 'Podaj wszystkie parametry', 1
+		end
+		declare @ConferenceDayID int;
+		set @ConferenceDayID = dbo.function_returnConferenceDay(@ConferenceID, @Date);
+		if (@ConferenceDayID is null)
+		begin 
+			;throw 52000, 'Conference does not exist', 1
+		end
+
+		if exists(
+			select * from DayReservation
+			where ReservationID = @ReservationID and ConferenceDayID = @ConferenceDayID
+		)
+		begin 
+			;throw 52000, 'User has already booked this day of conference', 1
+		end
+
+		insert into DayReservation(
+			ConferenceDayID,
+			ReservationID,
+			NormalTickets,
+			StudentTickets
+		)
+		values(
+			@ConferenceDayID,
+			@ReservationID,
+			@NormalTickets,
+			@StudentTickets
+		)
+	end try 
+	begin catch
+		declare @errorMessage nvarchar(2048)
+			= 'Cannot add DayReservation. Error message: '+ error_message();
+		;throw 52000, @errorMessage, 1
+	end catch
+end
+go
+
+create procedure procedure_initializeEmployee
+	@DayReservationID int,
+	@StudentIDCard varchar(50)
+as
+begin
+	set nocount on
+	begin try
+		if (
+			@DayReservationID is null
+		)
+		begin
+			;throw 52000, 'Podaj wszystkie parametry', 1
+		end
+
+		declare @ReservationID int = (select ReservationID from DayReservation where DayReservationID = @DayReservationID);
+		declare @ClientID int;
+		set @ClientID = (select ClientID from Reservation where ReservationID = @ReservationID)
+
+		if not exists (select * from Company where ClientID = @ClientID)
+		begin 
+			;throw 52000, 'Reservation is not made by company', 1
+		end
+
+		insert into Person default values
+		declare @PersonID int = @@IDENTITY;
+		insert into Employee(
+			ClientID,
+			PersonID,
+			FirstName,
+			LastName
+		)
+		VALUES(
+			@ClientID,
+			@PersonID,
+			null,
+			null
+		)
+		if (@StudentIDCard is not null)
+		begin 
+			insert into Student(
+				StudentCardID,
+				PersonID
+			)
+			values(
+				@StudentIDCard,
+				@PersonID
+			)
+		end
+		
+
+		exec procedure_addDayParticipant @PersonID, @DayReservationID
+	end try 
+	begin catch
+		declare @errorMessage nvarchar(2048)
+			= 'Cannot InitializeEmployee. Error message: '
+			+ error_message();
+		;throw 52000, @errorMessage, 1
+	end catch
+end
+go
+
 
 
 create procedure procedure_addEmployee
