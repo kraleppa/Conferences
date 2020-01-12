@@ -225,3 +225,19 @@ create function function_returnPersonID(@ReservationID int)
 		)
 	end
 go
+
+--zwraca listê rezerwacji danej firmy które nie zosta³y op³acone oraz czas jaki pozosta³
+--na op³acenie rezerwacji
+
+create function function_unpaidReservation(@ClientID int)
+	returns table
+	as
+	begin
+	return (
+		select ReservationID, DATEDIFF(day, DATEADD(day, 7, ReservationDate), GETDATE()) as 'Days left'
+		from Reservation 
+		where ClientID = @ClientID
+			and PaymentDate is null
+	)
+	end
+go
