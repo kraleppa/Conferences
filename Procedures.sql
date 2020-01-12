@@ -1116,5 +1116,49 @@ begin
 end 
 go
 
-		
+create procedure procedure_addPayment
+	@ReservationID int
+as
+begin
+	set nocount on
+	begin try
+		if (
+			@ReservationID is null
+		)
+		begin
+			;throw 52000, 'Podaj wszystkie parametry', 1
+		end
+	
+		if not exists (
+			select * from Reservation where ReservationID = @ReservationID
+		)
+		begin
+			;throw 52000, 'Reservation does not exist', 1
+		end
+
+		if exists (
+			select * from Reservation 
+			where ReservationID = @ReservationID 
+				and PaymentDate is not null
+		)
+		begin
+			;throw 52000, 'Reservation has already been paid', 1
+		end
+
+		update Reservation 
+		set PaymentDate = GETDATE()
+		where ReservationID = @ReservationID
+	
+	end try
+	begin catch 
+		declare @errorMessage nvarchar(2048)
+			= 'Cannot add Payment. Error message: '
+			+ error_message();
+		;throw 52000, @errorMessage, 1
+	end catch
+end
+go
+
+	
+
 
