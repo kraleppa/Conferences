@@ -671,7 +671,7 @@ end
 go
 
 
-create procedure procedure_addConferenceReservation 
+create procedure procedure_addReservation 
 	@ClientID int
 as
 begin
@@ -972,3 +972,149 @@ begin
 		;throw 52000, @errorMessage, 1
 	end catch
 end
+go
+
+create procedure procedure_addWorkshopReservation
+	@WorkshopID int, 
+	@DayReservationID int,
+	@Tickets int
+as
+begin
+	set nocount on
+	begin try
+		
+		if (@WorkshopID is null or
+			@DayReservationID is null or
+			@Tickets is null
+		)
+		begin
+			;throw 52000, 'Podaj wszystkie dane', 1
+		end
+		
+		if not exists (select * from DayReservation where DayReservationID = @DayReservationID)
+		begin
+			;throw 52000, 'Day Reservation does not exist', 1
+		end
+
+		if not exists (select * from Workshop where WorkshopID = @WorkshopID)
+		begin
+			;throw 52000, 'Workshop does not exist', 1
+		end
+
+		declare @isIndividual bit;
+		if exists ( 
+			select * from DayReservation as dr 
+			inner join Reservation as r 
+					on dr.ReservationID = r.ReservationID
+			inner join Clients as c
+				on c.ClientID = r.ClientID
+			inner join IndividualClient as ic
+				on ic.ClientID = c.ClientID
+			where DayReservationID = @DayReservationID
+		)
+		begin
+			set @isIndividual = 1;
+		end
+		else
+		begin
+			set @isIndividual = 0;
+		end
+
+		if (@Tickets <= 0)
+		begin
+			;throw 52000, 'Number of tickets has to be greater than 0', 1
+		end
+
+		if (@isIndividual = 1 and @Tickets <> 1)
+		begin
+			;throw 52000, 'Individual client can buy only one ticket', 1
+		end
+
+		insert into WorkshopReservation (
+			WorkshopID,
+			DayReservationID,
+			Tickets
+		)
+		values (
+			@WorkshopID,
+			@DayReservationID,
+			@Tickets
+		)
+
+	end try
+	begin catch 
+		declare @errorMessage nvarchar(2048)
+			= 'Cannot add WorkshopReservation. Error message: '
+			+ error_message();
+		;throw 52000, @errorMessage, 1
+	end catch
+end
+go
+
+create procedure procedure_addWorkshopParticipant
+	@PersonID int,
+	@WorkshopReservationID int
+as
+begin
+	set nocount on
+	begin try
+		
+		if (
+			@PersonID is null or
+			@WorkshopReservationID is null
+		)
+		begin
+			;throw 52000, 'Podaj wszystkie dane', 1
+		end
+
+		if not exists (select * from Person where PersonID = @PersonID)
+		begin
+			;throw 52000, 'Person does not exist', 1
+		end
+
+		if not exists (select * from WorkshopReservation where WorkshopReservationID = @WorkshopReservationID)
+		begin 
+			;throw 52000, 'WorkshopReservation does not exist', 1
+		end
+
+		 
+		declare @DayReservationID int = (
+			select DayReservationID from WorkshopReservation 
+			where WorkshopReservationID = @WorkshopReservationID
+		)
+
+		if not exists (
+			select * from DayParticipant
+			where PersonID = @PersonID 
+				and DayReservationID = @DayReservationID
+		)
+		begin 
+			;throw 52000, 'Person cannot be a participant of workshop when Person is not a particiapnt of conference', 1
+		end
+
+		declare @DayParticiapntID int = (
+			select DayParticipantID from DayParticipant
+			where PersonID = @PersonID and DayReservationID = @DayReservationID
+		)
+
+		insert into WorkshopParticipant(
+			DayParticipantID,
+			WorkshopReservationID
+		)
+		values(
+			@DayParticiapntID,
+			@WorkshopReservationID
+		)
+
+	end try
+	begin catch 
+		declare @errorMessage nvarchar(2048)
+			= 'Cannot add Workshop Participant. Error message: '
+			+ error_message();
+		;throw 52000, @errorMessage, 1
+	end catch
+end 
+go
+
+		
+
