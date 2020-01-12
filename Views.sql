@@ -27,7 +27,7 @@ go
 
 
 CREATE VIEW view_cancelledConferences as
-	select * 
+	select ConferenceName, ConferenceDescription, StartDate, EndDate
 	from Conferences
 	where Cancelled = 1
 go
@@ -48,13 +48,12 @@ CREATE VIEW view_conferencesSeatsLeft as
 		inner join ConferenceDay as cd 
 			on cd.ConferenceID = c.ConferenceID
 	where c.StartDate > getdate() and c.Cancelled = 0
-order by 1
 go
 
 
 --wyswietla liczbe wolnych miejsc na nadchodzace warsztaty
 --i calkowity limit miejsc
-CREATE VIEW view_workshopsSeatLimit as 
+CREATE VIEW view_workshopsSeatLeft as
 	select w.WorkshopID, wd.WorkshopName,
 		cd.ConferenceDate, w.StartTime, w.EndTime, 
 		w.Limit - SUM(wr.Tickets) AS 'Wolne miejsca', 
