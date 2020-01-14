@@ -1,7 +1,7 @@
 --Functions
 
 --zwraca liste uczestnikow danego dnia konferencji
-create function function_partiticipantsOfDayConference(@ConferenceDayID int)
+create function function_participantsOfDayConference(@ConferenceDayID int)
 	returns table 
 	as
 	return(
@@ -241,3 +241,4 @@ create function function_unpaidReservation(@ClientID int)
 	)
 	end
 go
+
