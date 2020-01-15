@@ -123,7 +123,7 @@ create function function_topIndividualClients(@X int)
 	returns table
 	as
 	return (
-		select top(@x) c.ClientID, ic.FirstName, ic.LastName, 
+		select top(@x) with ties c.ClientID, ic.FirstName, ic.LastName,
 			count(r.ReservationID) as 'Liczba oplaconych rezerwacji'
 		from Clients as c
 			inner join IndividualClient as ic
@@ -144,7 +144,7 @@ create function function_topCompaniesByTickets(@x int)
 	returns table 
 	as
 	return (
-		select top(@x) com.CompanyName, 
+		select top(@x) with ties com.CompanyName,
 			sum(dr.NormalTickets) 
 			+ 
 			sum(dr.StudentTickets) 
@@ -168,7 +168,7 @@ create function function_topCompaniesByReservations(@x int)
 	returns table 
 	as
 	return (
-		select top(@x) com.CompanyName, 
+		select top(1) with ties com.CompanyName,
 			count(r.ReservationID) as 'Liczba oplaconych rezerwacji'
 		from Company as com
 			inner join Clients as cl 
@@ -227,6 +227,7 @@ create function function_returnPersonID(@ReservationID int)
 	end
 go
 
+
 --zwraca listê rezerwacji ktore nie zostaly oplacone oraz czas jaki pozostal
 --na oplacenie rezerwacji
 create function function_unpaidReservations(@ClientID int)
@@ -236,7 +237,7 @@ create function function_unpaidReservations(@ClientID int)
 		select ReservationID, 
 			DATEDIFF(day, GETDATE(), DATEADD(day, 7, ReservationDate)) as 'Days left'
 		from Reservation 
-		where ClientID = 1
+		where ClientID = @ClientID
 			and PaymentDate is null
 	)
 go
@@ -247,16 +248,24 @@ create function function_returnNormalTicketCost(@reservationID int)
 	returns int
 	as
 	begin
+	    declare @reservationDate date = (
+            select ReservationDate
+            from Reservation
+            where ReservationID = @reservationID
+        )
 		return (
 			select c.BasePrice*(1-isnull(p.Discount, 0))
 			from Conferences as c
 				left outer join Prices as p
 					on p.ConferenceID = c.ConferenceID and 
-						(
-							select ReservationDate 
-							from Reservation 
-							where ReservationID = @reservationID
-						) between p.StartDate and p.EndDate	
+						p.StartDate in (
+						    select p2.StartDate,
+						           min(datediff(d, p2.StartDate, @reservationDate))
+						    from Prices as p2
+						    where p2.ConferenceID = c.ConferenceID
+						    group by p2.StartDate
+                            having min(datediff(d, StartDate, @reservationDate)) >= 0
+                        )
 			where c.ConferenceID = (
 				select distinct cd.ConferenceID
 				from DayReservation as dr
@@ -276,16 +285,23 @@ create function function_returnStudentTicketCost(@reservationID int)
 	returns int
 	as
 	begin
+	    declare @reservationDate date = (
+            select ReservationDate
+            from Reservation
+            where ReservationID = @reservationID
+        )
 		return (
 			select c.BasePrice*(1-isnull(p.Discount, 0))*(1-c.StudentDiscount)
 			from Conferences as c
 				left outer join Prices as p
 					on p.ConferenceID = c.ConferenceID and 
-						(
-							select ReservationDate 
-							from Reservation 
-							where ReservationID = @reservationID
-						) between p.StartDate and p.EndDate	
+						p.StartDate in (
+						    select p2.StartDate, min(datediff(d, p2.StartDate, @reservationDate))
+						    from Prices as p2
+						    where p2.ConferenceID = c.ConferenceID
+						    group by p2.StartDate
+                            having min(datediff(d, StartDate, @reservationDate)) >= 0
+                        )
 			where c.ConferenceID = (
 				select distinct cd.ConferenceID
 				from DayReservation as dr
@@ -353,6 +369,7 @@ create function function_reservationSummary(@reservationID int)
         where dr.ReservationID = @reservationID
     )
 go
+
 
 --generowanie faktury dla klienta indywidualnego
 create function function_generateIndividualInvoice(@reservationID int)

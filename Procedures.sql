@@ -322,7 +322,6 @@ go
 create procedure procedure_addPriceThreshold
 	@conferenceID int,
 	@startDate date,
-	@endDate date,
 	@discount real
 as
 begin
@@ -330,7 +329,6 @@ begin
 	begin try
 		if (@conferenceID is null or
 			@startDate is null or
-			@endDate is null or
 			@discount is null
 		)
 			begin
@@ -342,11 +340,14 @@ begin
 				;throw 52000, 'Zni¿ka musi byæ z przedzia³u (0,1)', 1
 			end
 
-		if(@startDate > @endDate)
-			begin
-				;throw 52000, 'Data rozpoczêcia musi byæ 
-							   pózniejsza ni¿ data zakoñczenia', 1
-			end
+		if(@discount + (
+		    select StudentDiscount
+		    from Conferences
+		    where @conferenceID = ConferenceID
+        ) >= 1)
+		    begin
+                ;throw 52000, 'Znizka ogolna wraz ze studencka nie moga razem wynosci >= 100%', 1
+            end
 
 		if(@startDate < getdate())
 			begin
@@ -362,41 +363,33 @@ begin
 				;throw 52000, 'Nie ma takiej konferencji', 1
 			end
 
-		if(@endDate > (
-				select StartDate
-				from Conferences
-				where ConferenceID = @conferenceID
-			)
-		)
+		if(@startDate > (
+		    select StartDate
+		    from Conferences
+		    where ConferenceID = @conferenceID
+        ))
 			begin
-				;throw 52000, 'Daty progu musz¹ byæ przed 
-							   dat¹ konferencji', 1
+				;throw 52000, 'Data rozpoczêcia musi byæ
+							   przed dat¹ konferencji', 1
 			end
 
-		if(0 < ( 
-				select count(PriceID)
-				from Prices
-				where ConferenceID = @conferenceID and (
-					(StartDate <= @endDate and @endDate <= EndDate)
-					or (StartDate <= @startDate and @startDate <= EndDate)
-				)
-			)
-		)
-			begin
-				;throw 52000, 'Konferencja ma ju¿ próg cenowy 
-					zawieraj¹cy czêœæ tego okresu', 1;
-			end
+		if exists (
+		    select *
+		    from Prices
+		    where StartDate = @startDate
+        )
+		    begin
+                ;throw 52000, 'Prog o tej dacie juz istnieje', 1
+            end
 
 		insert into Prices (
 			ConferenceID,
 			StartDate,
-			EndDate,
 			Discount
 		)
 		values (
 			@conferenceID,
 			@startDate,
-			@endDate,
 			@discount
 		)
 	end try
@@ -428,7 +421,7 @@ begin
 			where PriceID = @priceID
 		)
 			begin
-				;throw 52000, 'Podany próg cenowy nie istnieje.', 1
+				;throw 52000, 'Podany prog cenowy nie istnieje.', 1
 			end
 
 		delete Prices	
@@ -437,7 +430,7 @@ begin
 
 	begin catch 
 		declare @errorMsg nvarchar(2048)
-			= 'Cannot elete price treshold. Error message: '
+			= 'Cannot delete price treshold. Error message: '
 			+ error_message();
 		;throw 52000, @errorMsg, 1
 	end catch

@@ -52,7 +52,6 @@ CREATE TABLE Conferences (
     StudentDiscount real NULL default 0,
     Limit int  NOT NULL,
 		check([Limit] > 0),
-    /*Cancelled bit  NULL default 0,*/
     BasePrice money  NOT NULL,
 		check([BasePrice] > 0),
     CONSTRAINT Conferences_pk PRIMARY KEY  (ConferenceID)
@@ -115,8 +114,6 @@ CREATE TABLE Prices (
     PriceID int identity(1,1) NOT NULL,
     ConferenceID int  NOT NULL,
     StartDate date  NOT NULL,
-    EndDate date  NOT NULL,
-	check([EndDate] >= [StartDate]),
     Discount real  NOT NULL,
 		check([Discount] > 0 and [Discount] < 1),
     CONSTRAINT Prices_pk PRIMARY KEY  (PriceID)
