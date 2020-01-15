@@ -353,4 +353,3 @@ create function function_reservationInfo(@reservationID int)
         where dr.ReservationID = @reservationID
     )
 go
-

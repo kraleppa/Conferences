@@ -671,19 +671,66 @@ end
 go
 
 
-create procedure procedure_addReservation 
-	@ClientID int
+create procedure procedure_addIndividualReservation
+	@ClientID int,
+	@ConferenceID int,
+	@DayList IndividualReservation READONLY
 as
 begin
 set nocount on
 	begin try 
 		if (
-			@ClientID is null
+			@ClientID is null or
+			@ConferenceID is null
 		)
 		begin
 			;throw 52000, 'Podaj wszystkie parametry', 1
 		end
-		
+		--sprawdzam czy client istnieje
+		if not exists(select * from Clients where ClientID = @ClientID)
+		begin
+            ;throw 52000, 'Client does not exists', 1
+        end
+		--sprawdzam czy client jest ind
+		if not exists(select * from Clients as c inner join IndividualClient IC on c.ClientID = IC.ClientID where c.ClientID = @ClientID)
+		begin
+            ;throw 52000, 'Client is not individual', 1
+        end
+        --sprawdzam czy konferncja istnieje
+		if not exists(select * from Conferences where ConferenceID = @ConferenceID)
+		begin
+            ;throw 52000, 'Conference does not exists', 1
+        end
+
+		--sprawdza czy uzytkownik zrobil rezerwacji na dany dzien konferencji
+
+		if exists (
+		    select * from Reservation as r
+		        inner join DayReservation DR on r.ReservationID = DR.ReservationID
+		        inner join ConferenceDay CD on DR.ConferenceDayID = CD.ConferenceDayID
+		    where CD.ConferenceID = @ConferenceID and r.ClientID = @ClientID
+        )
+		begin
+            ;throw 52000, 'User has already booked this Conference', 1
+        end
+
+	    declare @iterator int = 1;
+		declare @max int = (select count(*) from @DayList);
+		if (@max <= 0)
+		begin
+            ;throw 52000, 'DayList cannot be empty', 1
+        end
+		declare @day date;
+		while (@iterator <= @max)
+		begin
+		    set @day = (select ConferenceDate from @DayList where ID = @iterator)
+            if (dbo.function_returnConferenceDay(
+                @ConferenceID, @day) is null)
+		    begin
+                ;throw 52000, 'Conference day does not exists', 1
+            end
+		    set @iterator = @iterator + 1;
+        end
 		insert into Reservation(
 			ClientID,
 			ReservationDate
@@ -692,7 +739,17 @@ set nocount on
 			@ClientID,
 			GETDATE()
 		)
-	end try 
+		declare @ReservationID int = @@IDENTITY;
+		set @iterator = 1;
+		while (@iterator <= @max)
+		begin
+		    set @day = (select ConferenceDate from @DayList where ID = @iterator)
+		    declare @ConferenceDayID int = dbo.function_returnConferenceDay (@ConferenceID, @day)
+            exec procedure_addIndividualDayReservation @ReservationID, @ConferenceDayID;
+		    set @iterator = @iterator + 1;
+        end
+	end try
+
 	begin catch
 		declare @errorMessage nvarchar(2048)
 			= 'Cannot add Reservation. Error message: '
@@ -738,27 +795,19 @@ go
 
 create procedure procedure_addIndividualDayReservation
 	@ReservationID int,
-	@ConferenceID int,
-	@Date date
+	@ConferenceDayID int
 as
 begin
 	set nocount on
 	begin try
 		if (
-			@ReservationID is null or
-			@ConferenceID is null or
-			@Date is null
+			@ConferenceDayID is null
+			or @ReservationID is null
 		)
 		begin
 			;throw 52000, 'Podaj wszystkie parametry', 1
 		end
 
-		declare @ConferenceDayID int;
-		set @ConferenceDayID = dbo.function_returnConferenceDay(@ConferenceID, @Date);
-		if (@ConferenceDayID is null)
-		begin 
-			;throw 52000, 'Conference does not exist', 1
-		end
 
 		if exists(
 			select * from DayReservation
@@ -814,10 +863,139 @@ begin
 end
 go
 
+create procedure procedure_addCompanyReservation
+    @ClientID int,
+    @ConferenceID int,
+    @DayList CompanyReservation READONLY,
+    @StudentList StudentIDCards READONLY
+as
+begin
+    set nocount on
+    begin try
+        if (@ClientID is null or @ConferenceID is null)
+        begin
+            ;throw 52000, 'Podaj wszystkie parametry', 1
+        end
+
+        --sprawdzam czy client istnieje
+		if not exists(select * from Clients where ClientID = @ClientID)
+		begin
+            ;throw 52000, 'Client does not exists', 1
+        end
+		--sprawdzam czy client jest comp
+		if not exists(select * from Clients as c inner join Company C2 on c.ClientID = C2.ClientID where c.ClientID = @ClientID)
+		begin
+            ;throw 52000, 'Client is not Company', 1
+        end
+        --sprawdzam czy konferncja istnieje
+		if not exists(select * from Conferences where ConferenceID = @ConferenceID)
+		begin
+            ;throw 52000, 'Conference does not exists', 1
+        end
+
+		--sprawdza czy uzytkownik zrobil rezerwacje na dany dzien konferencji
+		if exists (
+		    select * from Reservation as r
+		        inner join DayReservation DR on r.ReservationID = DR.ReservationID
+		        inner join ConferenceDay CD on DR.ConferenceDayID = CD.ConferenceDayID
+		    where CD.ConferenceID = @ConferenceID and r.ClientID = @ClientID
+        )
+		begin
+            ;throw 52000, 'User has already booked this Conference', 1
+        end
+        declare @NStudent int = (select count(*) from @StudentList);
+        declare @it int = 1;
+        declare @idCard varchar(50);
+        declare @studentDate date;
+        while (@it <= @NStudent)
+        begin
+            set @idCard = (select StudentIDCard from @StudentList where ID = @it)
+            set @studentDate = (select ConferenceDate from @StudentList where ID = @it)
+            if exists(select * from Student where StudentCardID like @idCard)
+            begin
+                ;throw 52000, 'Student id card is not unique', 1;
+            end
+            if not exists (select * from @DayList where ConferenceDate = @studentDate)
+            begin
+                ;throw 52000, 'invalid student date', 1
+            end
+            set @it = @it + 1;
+        end
+
+
+        declare @iterator int =  1;
+        declare @NDay int = (select count(*) from @DayList);
+        if (@NDay <= 0)
+        begin
+            ;throw 52000, 'DayList cannot be empty', 1
+        end
+
+        declare @day date;
+        while (@iterator <= @NDay)
+		begin
+		    set @day = (select ConferenceDate from @DayList where ID = @iterator)
+            if (dbo.function_returnConferenceDay(
+                @ConferenceID, @day) is null)
+		    begin
+                ;throw 52000, 'Conference day does not exists', 1
+            end
+		    set @iterator = @iterator + 1;
+        end
+
+        insert into Reservation(
+            ClientID,
+            ReservationDate
+        ) VALUES (@ClientID, GETDATE())
+        declare @ReservationID int = @@IDENTITY
+        set @iterator = 1;
+        declare @normalTickets int;
+        declare @ConferenceDayID int;
+        declare @StudentTickets int;
+        declare @sIterator int;
+        declare @studentIDCard varchar(50);
+        declare @DayReservationID int;
+        while (@iterator <= @NDay)
+        begin
+            set @day = (select ConferenceDate from @DayList where ID = @iterator);
+            set @ConferenceDayID = dbo.function_returnConferenceDay (@ConferenceID, @day)
+            set @normalTickets = (select NormalTickets from @DayList where ID = @iterator);
+            set @studentTickets = (select count(*) from @StudentList where ConferenceDate = @day);
+            exec procedure_addCompanyDayReservation @ReservationID, @ConferenceID, @normalTickets, @StudentTickets
+            set @DayReservationID = @@IDENTITY;
+            set @sIterator = 1;
+            while (@sIterator <= @NStudent)
+            begin
+                set @studentIDCard = null;
+                set @studentIDCard = (select StudentIDCard from @StudentList where ConferenceDate = @day and ID = @sIterator);
+                if (@studentIDCard is not null and isnumeric(@studentIDCard) = 1)
+                begin
+                    exec procedure_initializeEmployee @DayReservationID, @studentIDCard;
+                end
+                set @sIterator = @sIterator + 1;
+            end
+
+
+            set @sIterator = 1;
+            while (@sIterator <= @normalTickets)
+            begin
+                exec procedure_initializeEmployee @DayReservationID, null
+                set @sIterator = @sIterator + 1;
+            end
+            set @iterator = @iterator + 1;
+        end
+    end try
+    begin catch
+		declare @errorMessage nvarchar(2048)
+			= 'Cannot add Reservation. Error message: '+ error_message();
+		;throw 52000, @errorMessage, 1
+	end catch
+end
+go
+
+
 create procedure procedure_addCompanyDayReservation
 	@ReservationID int,
-	@ConferenceID int,
-	@Date date,
+    @ConferenceDayID int,
 	@NormalTickets int,
 	@StudentTickets int
 as
@@ -826,27 +1004,17 @@ begin
 	begin try
 		if (
 			@ReservationID is null or
-			@ConferenceID is null or
-			@Date is null or 
+			@ConferenceDayID is null or
 			@NormalTickets is null or 
 			@StudentTickets is null
 		)
 		begin
 			;throw 52000, 'Podaj wszystkie parametry', 1
 		end
-		declare @ConferenceDayID int;
-		set @ConferenceDayID = dbo.function_returnConferenceDay(@ConferenceID, @Date);
+
 		if (@ConferenceDayID is null)
 		begin 
 			;throw 52000, 'Conference does not exist', 1
-		end
-
-		if exists(
-			select * from DayReservation
-			where ReservationID = @ReservationID and ConferenceDayID = @ConferenceDayID
-		)
-		begin 
-			;throw 52000, 'User has already booked this day of conference', 1
 		end
 
 		insert into DayReservation(
