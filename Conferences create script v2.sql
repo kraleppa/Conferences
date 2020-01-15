@@ -182,6 +182,7 @@ CREATE TABLE WorkshopReservation (
     CONSTRAINT WorkshopReservation_pk PRIMARY KEY  (WorkshopReservationID)
 );
 
+
 -- foreign keys
 -- Reference: City_Country (table: City)
 ALTER TABLE City ADD CONSTRAINT City_Country
