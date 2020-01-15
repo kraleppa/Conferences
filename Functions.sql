@@ -354,7 +354,7 @@ create function function_reservationSummary(@reservationID int)
     )
 go
 
-
+--generowanie faktury dla klienta indywidualnego
 create function function_generateIndividualInvoice(@reservationID int)
     returns table
     as
@@ -436,11 +436,11 @@ create function function_generateIndividualInvoice(@reservationID int)
 go
 
 
+--generowanie faktury dla firmy
 create function function_generateCompanyInvoice(@reservationID int)
     returns table
     as
     return (
-        declare @reservationID int = 1
         select concat('Rezerwuj¹cy: ', C3.CompanyName) as Faktura
         from Reservation as r
             inner join Clients C
@@ -576,4 +576,24 @@ create function function_generateCompanyInvoice(@reservationID int)
     )
 go
 
-select * from Student
+
+--zwraca nieoplacone rezerwacje klienta
+create function function_showUnpaidReservations(@ClientID int)
+    returns table
+    as
+    return (
+        select r.ReservationID, r.ReservationDate,
+               abs(7 - datediff(day, r.ReservationDate, getdate())) as 'days left',
+               sum(dr.NormalTickets*dbo.function_returnNormalTicketCost(r.ReservationID))
+               +
+               sum(dr.StudentTickets*dbo.function_returnStudentTicketCost(r.ReservationID))
+               as 'Kwota'
+        from Reservation as r
+            inner join DayReservation as dr
+                on dr.ReservationID = r.ReservationID
+        where r.ClientID = 1 and r.PaymentDate is null
+        group by r.ReservationID, r.ReservationDate
+    )
+go
+
+
