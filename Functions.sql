@@ -597,3 +597,15 @@ create function function_showUnpaidReservations(@ClientID int)
 go
 
 
+--wyswietla pracownikow firmy
+create function function_showEmployees(@CompanyID int)
+    returns table
+    as
+    return (
+        select e.FirstName, e.LastName
+        from Employee as e
+            inner join Company C
+                on e.ClientID = C.ClientID
+        where c.ClientID = @CompanyID
+    )
+go
