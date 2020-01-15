@@ -52,7 +52,7 @@ CREATE TABLE Conferences (
     StudentDiscount real NULL default 0,
     Limit int  NOT NULL,
 		check([Limit] > 0),
-    Cancelled bit  NULL default 0,
+    /*Cancelled bit  NULL default 0,*/
     BasePrice money  NOT NULL,
 		check([BasePrice] > 0),
     CONSTRAINT Conferences_pk PRIMARY KEY  (ConferenceID)
@@ -118,7 +118,7 @@ CREATE TABLE Prices (
     EndDate date  NOT NULL,
 	check([EndDate] >= [StartDate]),
     Discount real  NOT NULL,
-		check([Discount] > 0),
+		check([Discount] > 0 and [Discount] < 1),
     CONSTRAINT Prices_pk PRIMARY KEY  (PriceID)
 );
 
@@ -151,6 +151,7 @@ CREATE TABLE Workshop (
 		check([Limit] > 0),
     Cancelled bit  NULL default 0,
     Price money  NULL default 0,
+        check([Price] >= 0),
     CONSTRAINT Workshop_pk PRIMARY KEY  (WorkshopID)
 );
 
@@ -160,6 +161,7 @@ CREATE TABLE WorkshopDictionary (
     WorkshopName varchar(50)  NOT NULL,
     WorkshopDescription varchar(255)  NOT NULL,
     Price money  NULL default 0,
+        check([Price] >= 0),
     CONSTRAINT WorkshopDictionary_pk PRIMARY KEY  (WorkshopDictionaryID)
 );
 

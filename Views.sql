@@ -131,6 +131,7 @@ CREATE VIEW view_companiesYetToFillEmployees as
 go
 
 
+--wyswietla nadchodzace warsztaty
 CREATE VIEW view_upcomingWorkshops as
 	select w.WorkshopID, wd.WorkshopName, wd.WorkshopDescription, wd.Price,
 		c.ConferenceID, c.ConferenceName, cd.ConferenceDate, w.StartTime, w.EndTime
