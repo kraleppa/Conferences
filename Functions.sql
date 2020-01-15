@@ -301,7 +301,7 @@ go
 
 
 --wyswetlanie szczegolow rezerwacji
-create function function_reservationInfo(@reservationID int)
+create function function_reservationSummary(@reservationID int)
 	returns table
 	as
 	return (
@@ -353,3 +353,227 @@ create function function_reservationInfo(@reservationID int)
         where dr.ReservationID = @reservationID
     )
 go
+
+
+create function function_generateIndividualInvoice(@reservationID int)
+    returns table
+    as
+    return (
+        select concat('Rezerwuj¹cy: ', ic.FirstName, ' ' , ic.LastName) as Faktura
+        from Reservation as r
+            inner join Clients C
+                on r.ClientID = C.ClientID
+            inner join IndividualClient IC
+                on C.ClientID = IC.ClientID
+        where r.ReservationID = @reservationID
+        union all
+        select concat('Data rezerwacji: ', r.ReservationDate)
+        from Reservation as r
+        where r.ReservationID = @reservationID
+        union all
+        select concat('Data p³atnoœci: ', r.PaymentDate)
+        from Reservation as r
+        where r.ReservationID = @reservationID
+        union all
+        select Concat('Kwota: ',
+		    sum(dr.NormalTickets*dbo.function_returnNormalTicketCost(@reservationID))
+            +
+            sum(dr.StudentTickets*dbo.function_returnStudentTicketCost(@reservationID))
+		    +
+            sum(isnull(wr.Tickets*w.Price, 0))) as Faktura
+        from DayReservation as dr
+            left outer join WorkshopReservation wr
+                    on dr.DayReservationID = wr.DayReservationID
+	        left outer join Workshop w
+	            on wr.WorkshopID = w.WorkshopID
+        where dr.ReservationID = @reservationID
+        union all
+        select '-----------------------------------'
+        union all
+        select 'Szczegó³y'
+        union all
+        select ''
+        union all
+        select distinct concat('Konferencja: ', C2.ConferenceName) as Faktura
+        from DayReservation as DR
+            inner join ConferenceDay CD
+                on DR.ConferenceDayID = CD.ConferenceDayID
+            inner join Conferences C2
+                on CD.ConferenceID = C2.ConferenceID
+        where DR.ReservationID = @reservationID
+        union all
+        select concat('Cena biletu normalnego (N): ',
+            dbo.function_returnNormalTicketCost(@reservationID)) as Faktura
+        union all
+        select concat('Cena biletu studenckiego (S): ',
+            dbo.function_returnStudentTicketCost(@reservationID)) as Faktura
+        union all
+        select concat('Dzieñ konferencji: ', CD.ConferenceDate,
+            ', N: ', dr.NormalTickets, ', S: ', dr.StudentTickets, ', Cena: ',
+            dr.NormalTickets*dbo.function_returnNormalTicketCost(@reservationID)
+            +
+            dr.StudentTickets*dbo.function_returnStudentTicketCost(@reservationID)) as Faktura
+        from DayReservation as dr
+            inner join ConferenceDay CD
+                on dr.ConferenceDayID = CD.ConferenceDayID
+        where dr.ReservationID = @reservationID
+        union all
+        select 'Zarezerwowane warsztaty w ramach koferencji' as Faktura
+        union all
+        select concat(WD.WorkshopName, ', Dzieñ: ', CD.ConferenceDate, ', ',
+            W.StartTime, ' - ', W.EndTime ,', Cena: ', wr.Tickets*W.Price) as Faktura
+        from DayReservation as dr
+           left outer join WorkshopReservation WR
+               on dr.DayReservationID = WR.DayReservationID
+           left outer join Workshop W
+               on WR.WorkshopID = W.WorkshopID
+           left outer join WorkshopDictionary WD
+               on W.WorkshopDictionaryID = WD.WorkshopDictionaryID
+            inner join ConferenceDay CD
+                on W.ConferenceDayID = CD.ConferenceDayID
+        where dr.ReservationID = @reservationID
+    )
+go
+
+
+create function function_generateCompanyInvoice(@reservationID int)
+    returns table
+    as
+    return (
+        declare @reservationID int = 1
+        select concat('Rezerwuj¹cy: ', C3.CompanyName) as Faktura
+        from Reservation as r
+            inner join Clients C
+                on r.ClientID = C.ClientID
+            inner join Company C3
+                on C.ClientID = C3.ClientID
+        where r.ReservationID = @reservationID
+        union all
+        select concat('Data rezerwacji: ', r.ReservationDate)
+        from Reservation as r
+        where r.ReservationID = @reservationID
+        union all
+        select concat('Data p³atnoœci: ', r.PaymentDate)
+        from Reservation as r
+        where r.ReservationID = @reservationID
+        union all
+        select Concat('Kwota: ',
+		    sum(dr.NormalTickets*dbo.function_returnNormalTicketCost(@reservationID))
+            +
+            sum(dr.StudentTickets*dbo.function_returnStudentTicketCost(@reservationID))
+		    +
+            sum(isnull(wr.Tickets*w.Price, 0))) as Faktura
+        from DayReservation as dr
+            left outer join WorkshopReservation wr
+                    on dr.DayReservationID = wr.DayReservationID
+	        left outer join Workshop w
+	            on wr.WorkshopID = w.WorkshopID
+        where dr.ReservationID = @reservationID
+        union all
+        select '-----------------------------------'
+        union all
+        select ''
+        union all
+        select distinct concat('Konferencja: ', C2.ConferenceName) as Faktura
+        from DayReservation as DR
+            inner join ConferenceDay CD
+                on DR.ConferenceDayID = CD.ConferenceDayID
+            inner join Conferences C2
+                on CD.ConferenceID = C2.ConferenceID
+        where DR.ReservationID = @reservationID
+        union all
+        select concat('Cena biletu normalnego (N): ',
+            dbo.function_returnNormalTicketCost(@reservationID)) as Faktura
+        union all
+        select concat('Cena biletu studenckiego (S): ',
+            dbo.function_returnStudentTicketCost(@reservationID)) as Faktura
+        union all
+        select ''
+        union all
+        select concat('Dzieñ konferencji: ', CD.ConferenceDate,
+            ', N: ', dr.NormalTickets, ', S: ', dr.StudentTickets, ', Cena: ',
+            dr.NormalTickets*dbo.function_returnNormalTicketCost(@reservationID)
+            +
+            dr.StudentTickets*dbo.function_returnStudentTicketCost(@reservationID)) as Faktura
+        from DayReservation as dr
+            inner join ConferenceDay CD
+                on dr.ConferenceDayID = CD.ConferenceDayID
+        where dr.ReservationID = @reservationID
+        union all
+        select ''
+        union all
+        select 'Bilet normalny'
+        union all
+        select concat('Dzieñ konferencji: ', cd.ConferenceDate, ', ',
+            E.FirstName, ' ', e.LastName) as Faktura
+        from DayReservation as dr
+            inner join ConferenceDay CD
+                on dr.ConferenceDayID = CD.ConferenceDayID
+            inner join DayParticipant DP
+                on dr.DayReservationID = DP.DayReservationID
+            inner join Person P
+                on DP.PersonID = P.PersonID
+            inner join Employee E
+                on P.PersonID = E.PersonID
+        where dr.ReservationID = @reservationID and
+              p.PersonID not in (select Student.PersonID from Student)
+        union all
+        select ''
+        union all
+        select 'Bilet studencki'
+        union all
+            select concat('Dzieñ konferencji: ', cd.ConferenceDate, ', ',
+            E.FirstName, ' ', e.LastName) as Faktura
+        from DayReservation as dr
+            inner join ConferenceDay CD
+                on dr.ConferenceDayID = CD.ConferenceDayID
+            inner join DayParticipant DP
+                on dr.DayReservationID = DP.DayReservationID
+            inner join Person P
+                on DP.PersonID = P.PersonID
+            inner join Employee E
+                on P.PersonID = E.PersonID
+        where dr.ReservationID = @reservationID and
+              p.PersonID in (select Student.PersonID from Student)
+        union all
+        select ''
+        union all
+        select 'Zarezerwowane warsztaty w ramach konferencji' as Faktura
+        union all
+        select concat(WD.WorkshopName, ', Dzieñ: ', CD.ConferenceDate, ', ',
+            W.StartTime, ' - ', W.EndTime ,', Cena: ', wr.Tickets*W.Price) as Faktura
+        from DayReservation as dr
+            left outer join WorkshopReservation WR
+                   on dr.DayReservationID = WR.DayReservationID
+            left outer join Workshop W
+                on WR.WorkshopID = W.WorkshopID
+            left outer join WorkshopDictionary WD
+                on W.WorkshopDictionaryID = WD.WorkshopDictionaryID
+            inner join ConferenceDay CD
+                on W.ConferenceDayID = CD.ConferenceDayID
+        where dr.ReservationID = @reservationID
+        union all
+        select concat(WD.WorkshopName, ', Dzieñ: ', CD.ConferenceDate, ', ',
+            W.StartTime, ' - ', W.EndTime , e2.FirstName, ' ', e2.LastName) as Faktura
+        from DayReservation as dr
+            left outer join WorkshopReservation WR
+                on dr.DayReservationID = WR.DayReservationID
+            inner join Workshop W
+                on WR.WorkshopID = W.WorkshopID
+            inner join WorkshopDictionary WD
+                on W.WorkshopDictionaryID = WD.WorkshopDictionaryID
+            inner join ConferenceDay CD
+                on W.ConferenceDayID = CD.ConferenceDayID
+            inner join WorkshopParticipant as wp
+                on wp.WorkshopReservationID = wr.WorkshopReservationID
+            inner join DayParticipant as dp
+                on wp.DayParticipantID = dp.DayParticipantID
+            inner join Person P2
+                on dp.PersonID = P2.PersonID
+            inner join Employee E2
+                on P2.PersonID = E2.PersonID
+        where dr.ReservationID = @reservationID
+    )
+go
+
+select * from Student
