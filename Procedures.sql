@@ -892,6 +892,7 @@ begin
         declare @conferenceDayID int;
         declare @StudentTickets int;
         declare @dayReservationID int;
+        declare @PersonID int;
 
         declare @numberOfStudents int = (select count(*) from @StudentList);
         declare @studentIDCard varchar(50);
@@ -907,7 +908,7 @@ begin
             end
             set @normalTickets = (select NormalTickets from @DayList where ID = @iterator1);
             set @studentTickets = (select count(*) from @StudentList where ConferenceDate = @date);
-            exec procedure_addCompanyDayReservation @ReservationID, @ConferenceID, @normalTickets, @StudentTickets
+            exec procedure_addCompanyDayReservation @ReservationID, @conferenceDayID, @normalTickets, @StudentTickets
             set @dayReservationID = @@IDENTITY;
             set @iterator2 = 1;
             while (@iterator2 <= @numberOfStudents)
@@ -919,9 +920,19 @@ begin
                 end
                 set @studentIDCard = null;
                 set @studentIDCard = (select StudentIDCard from @StudentList where ConferenceDate = @date and ID = @iterator2);
-                if (@studentIDCard is not null and isnumeric(@studentIDCard) = 1)
+
+                if (@studentIDCard is not null)
                 begin
-                    exec procedure_initializeEmployee @dayReservationID, @studentIDCard;
+                    if exists (select * from Student where StudentCardID = @studentIDCard)
+                    begin
+                        set @PersonID = (select PersonID from Student where StudentCardID = @studentIDCard);
+                        exec procedure_addDayParticipant @PersonID, @dayReservationID
+                    end
+                    else
+                    begin
+                        exec procedure_initializeEmployee @dayReservationID, @studentIDCard;
+                    end
+
                 end
                 set @iterator2 = @iterator2 + 1;
             end
@@ -1140,7 +1151,7 @@ begin
 
         declare @PersonID int = (select PersonID from IndividualClient where ClientID = @ClientID)
         declare @DayParticipantID int = (select DayParticipantID from DayParticipant
-            inner join Person P on DayParticipant.PersonID = P.PersonID where P.PersonID = @PersonID)
+            inner join Person P on DayParticipant.PersonID = P.PersonID where P.PersonID = @PersonID and @DayReservationID = DayParticipant.DayReservationID)
 
         insert into WorkshopReservation(
             WorkshopID, DayReservationID, Tickets
@@ -1153,6 +1164,7 @@ begin
         )VALUES(
             @DayParticipantID, @WorkshopReservationID
         )
+
     commit tran addWorkshopIndividualReservation
     end try
     begin catch
@@ -1193,8 +1205,7 @@ begin
         begin
             ;throw 52000, 'Client is not company', 1
         end
-
-        declare @ConferenceDayID int = (select ConferenceDayID from Workshop where WorkshopID = @WorkshopID)
+        declare @ConferenceDayID int = (select ConferenceDayID from Workshop where WorkshopID = 1)
         declare @DayReservationID int = (select DayReservationID from DayReservation DR
             inner join Reservation AS R on R.ReservationID = DR.ReservationID
             where DR.ConferenceDayID = @ConferenceDayID and R.ClientID = @ClientID)
@@ -1205,6 +1216,8 @@ begin
         begin
             ;throw 52000, 'User has to book Conference to book a workshop', 1
         end
+
+
 
         declare @TicketsNumber int = (select count(*) from @PersonIDList)
 
@@ -1227,6 +1240,7 @@ begin
                 ;throw 52000, 'Person is not a participant of Conference in this day', 1
             end
             set @DayParticipantID = (select DayParticipantID from DayParticipant where PersonID = @PersonID and DayReservationID = @DayReservationID)
+            select 'ok3'
             insert into WorkshopParticipant(
                 DayParticipantID, WorkshopReservationID
             ) VALUES (
