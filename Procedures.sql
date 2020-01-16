@@ -350,13 +350,24 @@ begin
 				;throw 52000, 'Discount cannot be bigger than 1 and smaller than 0', 1
 			end
 
-		if(@discount + (
-		    select StudentDiscount
-		    from Conferences
-		    where @conferenceID = ConferenceID
-        ) >= 1)
+		if exists (
+		    select *
+		    from Prices
+		    where StartDate > @startDate and
+		          Discount > @discount
+        )
 		    begin
-                ;throw 52000, 'Znizka ogolna wraz ze studencka nie moga razem wynosci >= 100%', 1
+                ;throw 52000, 'Nie mozna dodac wyzszego progu niz pozniejszy', 1
+            end
+
+		if exists (
+		    select *
+		    from Prices
+		    where StartDate < @startDate and
+		          Discount < @discount
+        )
+		    begin
+                ;throw 52000, 'Nie mozna dodac wyzszego progu niz wczesniej', 1
             end
 
 		if(@startDate < getdate())

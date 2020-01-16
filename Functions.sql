@@ -35,8 +35,12 @@ create function function_workshopsDuringConference(@conf_id int)
 	returns table
 	as
 	return (
-		select conf.ConferenceName, cd.ConferenceDate, wd.WorkshopName, 
-		wd.WorkshopDescription, w.limit, w.StartTime, w.EndTime, w.Price
+		select conf.ConferenceName, conf.ConferenceDescription,
+		       conf.Limit as 'Conf. limit',
+		       conf.BasePrice as 'Conf. price', conf.StudentDiscount, cd.ConferenceDate,
+		       conf.StartDate, Conf.EndDate, C.City, conf.Street, conf.BuildingNumber,
+		       wd.WorkshopName, wd.WorkshopDescription, w.limit as 'W. limit',
+		       w.StartTime, w.EndTime, w.Price as 'W. Price'
 		from Conferences as conf
 			inner join ConferenceDay as cd 
 				on cd.ConferenceID = conf.ConferenceID
@@ -44,6 +48,8 @@ create function function_workshopsDuringConference(@conf_id int)
 				on w.ConferenceDayID = cd.ConferenceDayID
 			inner join WorkshopDictionary as wd 
 				on wd.WorkshopDictionaryID = w.WorkshopDictionaryID
+		    inner join City C
+		        on conf.CityID = C.CityID
 		where conf.ConferenceID = @conf_id
 	)
 go
@@ -232,10 +238,7 @@ create function function_returnPersonID(@ReservationID int)
 go
 
 
-
 --zwraca list� rezerwacji ktore nie zostaly oplacone oraz czas jaki pozostal
-
-
 create function function_unpaidReservations(@ClientID int)
 	returns table
 	as
