@@ -94,12 +94,12 @@ go
 
 --wyswietla rezerwacje ktore powinny zostac usuniete
 CREATE VIEW view_reservationOnConferenceToDelete as 
-	select r.ResevationID, r.ClientID, dr.NormalTickets, dr.StudentTickets,
+	select r.ReservationID, r.ClientID, dr.NormalTickets, dr.StudentTickets,
 		DATEADD(day, 7, r.ReservationDate) as 'Payment deadline',
 		c.ConferenceID, c.ConferenceName  
 		from Reservation as r
 		inner join DayReservation as dr 
-			on dr.ResevationID = r.ResevationID
+			on dr.ReservationID = r.ReservationID
 		inner join ConferenceDay as cd 
 			on cd.ConferenceDayID = dr.ConferenceDayID
 		inner join Conferences as c
@@ -115,7 +115,7 @@ CREATE VIEW view_companiesYetToFillEmployees as
 	from Company as com
 		inner join Clients as cl on cl.ClientID = com.ClientID
 		inner join Reservation as r on r.ClientID = cl.ClientID
-		inner join DayReservation as dr on dr.ResevationID = r.ResevationID
+		inner join DayReservation as dr on dr.ReservationID = r.ReservationID
 		inner join ConferenceDay as cd on cd.ConferenceDayID = dr.ConferenceDayID
 		inner join Conferences as c on c.ConferenceID = cd.ConferenceID
 	where datediff(day, getdate(), c.StartDate) <= 14 and exists 
@@ -131,6 +131,7 @@ CREATE VIEW view_companiesYetToFillEmployees as
 go
 
 
+--wyswietla nadchodzace warsztaty
 CREATE VIEW view_upcomingWorkshops as
 	select w.WorkshopID, wd.WorkshopName, wd.WorkshopDescription, wd.Price,
 		c.ConferenceID, c.ConferenceName, cd.ConferenceDate, w.StartTime, w.EndTime
