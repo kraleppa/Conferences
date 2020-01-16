@@ -217,4 +217,22 @@ as
     end
 go
 
+create trigger trigger_workshopLimitIsBiggerThanConferenceLimit
+    on Workshop
+    after insert
+as
+    begin
+        set nocount on
+        declare @WorkshopID int = (select WorkshopID from inserted)
+        declare @ConferenceLimit int = (
+                select TOP 1 C.Limit from Conferences as C
+                inner join ConferenceDay CD on C.ConferenceID = CD.ConferenceID
+                inner join Workshop W on CD.ConferenceDayID = W.ConferenceDayID
+                where W.WorkshopID = @WorkshopID
+            )
+        if exists (select * from Workshop as w where w.WorkshopID = @WorkshopID and w.Limit > @ConferenceLimit)
+        begin
+            ;throw 50001, 'Workshop limit cannot be bigger than ConferenceLimit', 1
+        end
+    end
 

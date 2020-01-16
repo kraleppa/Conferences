@@ -62,3 +62,26 @@ exec procedure_addWorkshopCompanyReservation 3, 2, @PersonIDList
 
 select * from Reservation
 exec procedure_removeReservation 3
+
+exec procedure_addWorkshop 1, '2021-07-22', 1, '10:00:00', '11:00:00', 1000
+exec procedure_addWorkshop 1, '2021-07-22', 1, '9:00:00', '11:00:00', 1000
+select * from Workshop
+
+declare @DayList CompanyReservation
+insert into @DayList(ConferenceDate, NormalTickets)VALUES('2021-07-22', 1)
+
+declare @StudentList StudentIDCards
+insert into @StudentList (ConferenceDate, StudentIDCard)VALUES ('2021-07-22', '103302')
+insert into @StudentList (ConferenceDate, StudentIDCard)VALUES ('2021-07-22', '203302')
+exec procedure_addCompanyReservation 4, 1, @DayList, @StudentList
+
+select * from Reservation
+
+select * from Workshop
+
+exec procedure_addWorkshop 1, '2021-07-22', 1, '09:00:00', '10:00:00', 800
+
+select * from Workshop
+
+select * from Company
+

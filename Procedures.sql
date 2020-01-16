@@ -39,6 +39,7 @@ as
 begin
 	set nocount on
 	begin try
+	    begin tran addWorkshop
 	    Declare @ConferenceDayID int = dbo.function_returnConferenceDay(@ConferenceID, @Date);
 		if  (@ConferenceDayID is null)
 		begin
@@ -74,8 +75,10 @@ begin
 			@Limit,
 			@Price
 		)
+		commit tran addWorkshop
 	end try
 	begin catch
+	    rollback tran addWorkshop
 
 		declare @errorMessage nvarchar(2048) =
 		'Cannot add workshop. Error message: ' + ERROR_MESSAGE();
