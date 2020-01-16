@@ -124,7 +124,7 @@ create function function_topIndividualClients(@X int)
 	as
 	return (
 		select top(@x) c.ClientID, ic.FirstName, ic.LastName, 
-			count(r.ReservationID) as 'Liczba op³aconych rezerwacji'
+			count(r.ReservationID) as 'Liczba opï¿½aconych rezerwacji'
 		from Clients as c
 			inner join IndividualClient as ic
 				on ic.ClientID = c.ClientID
@@ -169,7 +169,7 @@ create function function_topCompaniesByReservations(@x int)
 	as
 	return (
 		select top(@x) com.CompanyName, 
-			count(r.ReservationID) as 'Liczba op³aconych rezerwacji'
+			count(r.ReservationID) as 'Liczba opï¿½aconych rezerwacji'
 		from Company as com
 			inner join Clients as cl 
 				on cl.ClientID = com.ClientID
@@ -227,8 +227,8 @@ create function function_returnPersonID(@ReservationID int)
 	end
 go
 
---zwraca listê rezerwacji które nie zosta³y op³acone oraz czas jaki pozosta³
---na op³acenie rezerwacji
+--zwraca listï¿½ rezerwacji ktï¿½re nie zostaï¿½y opï¿½acone oraz czas jaki pozostaï¿½
+--na opï¿½acenie rezerwacji
 create function function_unpaidReservations(@ClientID int)
 	returns table
 	as
@@ -306,7 +306,7 @@ create function function_reservationSummary(@reservationID int)
 	as
 	return (
 		select concat('Konferencja: ', c.ConferenceName, ', Data: ',
-			cd.ConferenceDate, ' - ', 'Liczba biletów normalnych: ', dr.NormalTickets)
+			cd.ConferenceDate, ' - ', 'Liczba biletï¿½w normalnych: ', dr.NormalTickets)
 				as ReservationInfo
 		from DayReservation as dr
 			inner join ConferenceDay as cd
@@ -316,7 +316,7 @@ create function function_reservationSummary(@reservationID int)
 		where dr.ReservationID = @reservationID
 		union all
 		select concat('Konferencja: ', c.ConferenceName, ', Data: ',
-			cd.ConferenceDate, ' - ', 'Liczba biletów studenckich: ', dr.StudentTickets)
+			cd.ConferenceDate, ' - ', 'Liczba biletï¿½w studenckich: ', dr.StudentTickets)
 				as ReservationInfo
 		from DayReservation as dr
 			inner join ConferenceDay as cd
@@ -326,7 +326,7 @@ create function function_reservationSummary(@reservationID int)
 		where dr.ReservationID = @reservationID
 		union all
 		select concat('Warsztat: ', wd.WorkshopName, ', Data: ',
-			cd.ConferenceDate, ' - ', 'Liczba biletów: ', wr.Tickets)
+			cd.ConferenceDate, ' - ', 'Liczba biletï¿½w: ', wr.Tickets)
 				as ReservationInfo
 		from DayReservation as dr
 			inner join ConferenceDay as cd
@@ -359,7 +359,7 @@ create function function_generateIndividualInvoice(@reservationID int)
     returns table
     as
     return (
-        select concat('Rezerwuj¹cy: ', ic.FirstName, ' ' , ic.LastName) as Faktura
+        select concat('Rezerwujï¿½cy: ', ic.FirstName, ' ' , ic.LastName) as Faktura
         from Reservation as r
             inner join Clients C
                 on r.ClientID = C.ClientID
@@ -371,7 +371,7 @@ create function function_generateIndividualInvoice(@reservationID int)
         from Reservation as r
         where r.ReservationID = @reservationID
         union all
-        select concat('Data p³atnoœci: ', r.PaymentDate)
+        select concat('Data pï¿½atnoï¿½ci: ', r.PaymentDate)
         from Reservation as r
         where r.ReservationID = @reservationID
         union all
@@ -390,7 +390,7 @@ create function function_generateIndividualInvoice(@reservationID int)
         union all
         select '-----------------------------------'
         union all
-        select 'Szczegó³y'
+        select 'Szczegï¿½y'
         union all
         select ''
         union all
@@ -408,7 +408,7 @@ create function function_generateIndividualInvoice(@reservationID int)
         select concat('Cena biletu studenckiego (S): ',
             dbo.function_returnStudentTicketCost(@reservationID)) as Faktura
         union all
-        select concat('Dzieñ konferencji: ', CD.ConferenceDate,
+        select concat('Dzieï¿½ konferencji: ', CD.ConferenceDate,
             ', N: ', dr.NormalTickets, ', S: ', dr.StudentTickets, ', Cena: ',
             dr.NormalTickets*dbo.function_returnNormalTicketCost(@reservationID)
             +
@@ -420,7 +420,7 @@ create function function_generateIndividualInvoice(@reservationID int)
         union all
         select 'Zarezerwowane warsztaty w ramach koferencji' as Faktura
         union all
-        select concat(WD.WorkshopName, ', Dzieñ: ', CD.ConferenceDate, ', ',
+        select concat(WD.WorkshopName, ', Dzieï¿½: ', CD.ConferenceDate, ', ',
             W.StartTime, ' - ', W.EndTime ,', Cena: ', wr.Tickets*W.Price) as Faktura
         from DayReservation as dr
            left outer join WorkshopReservation WR
@@ -441,7 +441,7 @@ create function function_generateCompanyInvoice(@reservationID int)
     as
     return (
         declare @reservationID int = 1
-        select concat('Rezerwuj¹cy: ', C3.CompanyName) as Faktura
+        select concat('Rezerwujï¿½cy: ', C3.CompanyName) as Faktura
         from Reservation as r
             inner join Clients C
                 on r.ClientID = C.ClientID
@@ -453,7 +453,7 @@ create function function_generateCompanyInvoice(@reservationID int)
         from Reservation as r
         where r.ReservationID = @reservationID
         union all
-        select concat('Data p³atnoœci: ', r.PaymentDate)
+        select concat('Data pï¿½atnoï¿½ci: ', r.PaymentDate)
         from Reservation as r
         where r.ReservationID = @reservationID
         union all
@@ -490,7 +490,7 @@ create function function_generateCompanyInvoice(@reservationID int)
         union all
         select ''
         union all
-        select concat('Dzieñ konferencji: ', CD.ConferenceDate,
+        select concat('Dzieï¿½ konferencji: ', CD.ConferenceDate,
             ', N: ', dr.NormalTickets, ', S: ', dr.StudentTickets, ', Cena: ',
             dr.NormalTickets*dbo.function_returnNormalTicketCost(@reservationID)
             +
@@ -504,7 +504,7 @@ create function function_generateCompanyInvoice(@reservationID int)
         union all
         select 'Bilet normalny'
         union all
-        select concat('Dzieñ konferencji: ', cd.ConferenceDate, ', ',
+        select concat('Dzieï¿½ konferencji: ', cd.ConferenceDate, ', ',
             E.FirstName, ' ', e.LastName) as Faktura
         from DayReservation as dr
             inner join ConferenceDay CD
@@ -522,7 +522,7 @@ create function function_generateCompanyInvoice(@reservationID int)
         union all
         select 'Bilet studencki'
         union all
-            select concat('Dzieñ konferencji: ', cd.ConferenceDate, ', ',
+            select concat('Dzieï¿½ konferencji: ', cd.ConferenceDate, ', ',
             E.FirstName, ' ', e.LastName) as Faktura
         from DayReservation as dr
             inner join ConferenceDay CD
@@ -540,7 +540,7 @@ create function function_generateCompanyInvoice(@reservationID int)
         union all
         select 'Zarezerwowane warsztaty w ramach konferencji' as Faktura
         union all
-        select concat(WD.WorkshopName, ', Dzieñ: ', CD.ConferenceDate, ', ',
+        select concat(WD.WorkshopName, ', Dzieï¿½: ', CD.ConferenceDate, ', ',
             W.StartTime, ' - ', W.EndTime ,', Cena: ', wr.Tickets*W.Price) as Faktura
         from DayReservation as dr
             left outer join WorkshopReservation WR
@@ -553,7 +553,7 @@ create function function_generateCompanyInvoice(@reservationID int)
                 on W.ConferenceDayID = CD.ConferenceDayID
         where dr.ReservationID = @reservationID
         union all
-        select concat(WD.WorkshopName, ', Dzieñ: ', CD.ConferenceDate, ', ',
+        select concat(WD.WorkshopName, ', Dzieï¿½: ', CD.ConferenceDate, ', ',
             W.StartTime, ' - ', W.EndTime , e2.FirstName, ' ', e2.LastName) as Faktura
         from DayReservation as dr
             left outer join WorkshopReservation WR

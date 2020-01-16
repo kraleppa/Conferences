@@ -7,16 +7,23 @@ create procedure procedure_addWorkshopToDictionary
 as
 begin
 	set nocount on
-	insert into WorkshopDictionary (
-		WorkshopName,
-		WorkshopDescription,
-		Price
-	)
-	VALUES (
-		@WorkshopName,
-		@WorkshopDescription,
-		@Price
-	)
+	begin try
+	    insert into WorkshopDictionary (
+		    WorkshopName,
+		    WorkshopDescription,
+		    Price
+	    )
+	    VALUES (
+		    @WorkshopName,
+		    @WorkshopDescription,
+		    @Price
+	    )
+	end try
+	begin catch
+		declare @errorMessage nvarchar(2048) =
+		'Cannot add workshop. Error message: ' + ERROR_MESSAGE();
+		;throw 52000, @errorMessage, 1;
+	end catch
 end
 go
 
@@ -31,8 +38,8 @@ create procedure procedure_addWorkshop
 as
 begin
 	set nocount on
-	Declare @ConferenceDayID int = dbo.function_returnConferenceDay(@ConferenceID, @Date);
 	begin try
+	    Declare @ConferenceDayID int = dbo.function_returnConferenceDay(@ConferenceID, @Date);
 		if  (@ConferenceDayID is null)
 		begin
 			;throw 52000, 'Conference day does not exist', 1
@@ -47,10 +54,9 @@ begin
 		end
 		if (@StartTime > @EndTime)
 		begin
-			;throw 52000, 'Start time cannot be bigger than End time', 1
+			;throw 52000, 'Start time cannot be bigger than end time', 1
 		end
-
-		Declare @Price money = dbo.function_returnValueOfWorkshop(@WorkshopDictionaryID);
+		Declare @Price money = (select price from WorkshopDictionary where WorkshopDictionaryID = @WorkshopDictionaryID)
 
 	insert into Workshop (
 		WorkshopDictionaryID,
@@ -70,6 +76,7 @@ begin
 		)
 	end try
 	begin catch
+
 		declare @errorMessage nvarchar(2048) =
 		'Cannot add workshop. Error message: ' + ERROR_MESSAGE();
 		;throw 52000, @errorMessage, 1;
@@ -118,7 +125,7 @@ begin
 	begin try
 		if(@cityName is null or @countryName is null) 
 			begin
-				;throw 52000,  'Podaj nazwe miasta i kraju', 1
+				;throw 52000,  'All arguments are compulsory.', 1
 			end 
 		if not exists (
 			select *
@@ -169,7 +176,7 @@ begin
 		   @conferenceDate is null
 		  )
 			begin
-				;throw 52000,  'Podaj wszystkie parametry.', 1
+				;throw 52000,  'All arguments are compulsory.', 1
 			end
 
 		insert into ConferenceDay (
@@ -207,7 +214,8 @@ create procedure procedure_addConference
 as
 begin
 	set nocount on
-	begin try 
+	begin try
+        begin tran add_conference
 
 		if (@conferenceName is null or
 			@conferenceDescription is null or
@@ -222,24 +230,22 @@ begin
 			@basePrice is null
 		)
 			begin
-				;throw 52000,  'Podaj wszystkie parametry.', 1
+				;throw 52000,  'All arguments are compulsory.', 1
 			end
 
 		if (@startDate <= getdate())
 			begin
-				;throw 52000, 'Data rozpoczêcia musi byæ pózniejsza ni¿ 
-							   dzisiejsza', 1
+				;throw 52000, 'Start date cannot be earlier than today', 1
 			end
 
 		if (@startDate >@endDate)
 			begin
-				;throw 52000, 'Data rozpoczêcia musi byæ pó¿niejsza ni¿
-							   data zakoñczenia', 1
+				;throw 52000, 'Start date has to bo earlier than end date', 1
 			end
 
 		if(@studentDiscount < 0 or @studentDiscount > 1)
 			begin
-				;throw 52000, 'Zni¿ka musi byæ z przedzia³u [0,1]', 1
+				;throw 52000, 'Discount cannot be bigger than 1 and smaller than 0', 1
 			end
 
 		if not exists (
@@ -306,9 +312,10 @@ begin
 
 				set @d = dateadd(d, 1, @d)
 			end
+        commit tran add_conference
 	end try
-
-	begin catch 
+	begin catch
+        rollback tran add_conference
 		declare @errorMsg nvarchar(2048)
 			= 'Cannot add conference. Error message: '
 			+ error_message();
@@ -334,23 +341,22 @@ begin
 			@discount is null
 		)
 			begin
-				;throw 52000, 'Podaj wszystkie parametry', 1
+				;throw 52000, 'All arguments are compulsory.', 1
 			end
 
 		if(@discount <= 0 or @discount >= 1)
 			begin
-				;throw 52000, 'Zni¿ka musi byæ z przedzia³u (0,1)', 1
+				;throw 52000, 'Discount cannot be bigger than 1 and smaller than 0', 1
 			end
 
 		if(@startDate > @endDate)
 			begin
-				;throw 52000, 'Data rozpoczêcia musi byæ 
-							   pózniejsza ni¿ data zakoñczenia', 1
+				;throw 52000, 'Start date has to bo earlier than end date', 1
 			end
 
 		if(@startDate < getdate())
 			begin
-				;throw 52000, 'Nie mo¿esz ustaliæ progu w przesz³oœci', 1
+				;throw 52000, 'Start date is earlier than today', 1
 			end
 
 		if not exists (
@@ -359,7 +365,7 @@ begin
 			where conferenceID = @conferenceID
 		)
 			begin
-				;throw 52000, 'Nie ma takiej konferencji', 1
+				;throw 52000, 'Conference does not exist', 1
 			end
 
 		if(@endDate > (
@@ -369,8 +375,7 @@ begin
 			)
 		)
 			begin
-				;throw 52000, 'Daty progu musz¹ byæ przed 
-							   dat¹ konferencji', 1
+				;throw 52000, 'End date has to be earlier than conference start date', 1
 			end
 
 		if(0 < ( 
@@ -383,8 +388,7 @@ begin
 			)
 		)
 			begin
-				;throw 52000, 'Konferencja ma ju¿ próg cenowy 
-					zawieraj¹cy czêœæ tego okresu', 1;
+				;throw 52000, 'Conference has price threshold during this time', 1;
 			end
 
 		insert into Prices (
@@ -403,7 +407,7 @@ begin
 
 	begin catch 
 		declare @errorMsg nvarchar(2048)
-			= 'Cannot add price treshold. Error message: '
+			= 'Cannot add price threshold. Error message: '
 			+ error_message();
 		;throw 52000, @errorMsg, 1
 	end catch
@@ -411,7 +415,7 @@ end
 go
 
 
-create procedure procedure_deletePriceTreshold
+create procedure procedure_deletePriceThreshold
 	@priceID int
 as
 begin
@@ -419,7 +423,7 @@ begin
 	begin try
 		if(@priceID is null)
 			begin
-				;throw 52000, 'Podaj ID progu cenowego', 1
+				;throw 52000, 'All arguments are compulsory', 1
 			end
 
 		if not exists (
@@ -428,7 +432,7 @@ begin
 			where PriceID = @priceID
 		)
 			begin
-				;throw 52000, 'Podany próg cenowy nie istnieje.', 1
+				;throw 52000, 'Price threshold does not exist', 1
 			end
 
 		delete Prices	
@@ -437,7 +441,7 @@ begin
 
 	begin catch 
 		declare @errorMsg nvarchar(2048)
-			= 'Cannot elete price treshold. Error message: '
+			= 'Cannot delete price treshold. Error message: '
 			+ error_message();
 		;throw 52000, @errorMsg, 1
 	end catch
@@ -447,17 +451,19 @@ go
 
 
 create procedure procedure_addIndividualClient
-	@phone varchar(9),
-	@street varchar(50),
-	@buildingNumber varchar(10),
-	@cityName varchar(50),
-	@countryName varchar(50),
-	@email varchar(50),
 	@firstName varchar(50),
 	@lastName varchar(50),
-	@studnetCardID varchar(50)
+	@phone varchar(9),
+	@email varchar(50),
+	@studentCardID varchar(50),
+	@countryName varchar(50),
+	@cityName varchar(50),
+	@street varchar(50),
+	@buildingNumber varchar(10)
+
 as
 begin
+    begin tran addIndividualClient
 	set nocount on
 	begin try
 		if (@phone is null or
@@ -470,8 +476,7 @@ begin
 			@lastName is null
 		)
 			begin
-				;throw 52000, 'Podaj wszystkie dane 
-							   (nr legitymacji jest opcjonalny).', 1
+				;throw 52000, 'All arguments (beside StudentCardID) are compulsory ', 1
 			end
 
 		if not exists (
@@ -488,15 +493,6 @@ begin
 				exec procedure_addCity
 						@cityName,
 						@countryName
-			end
-
-		if exists (
-			select * 
-			from Clients
-			where Email = @email
-		)
-			begin
-				;throw 52000, 'Adres email jest ju¿ wykorzystany', 1
 			end
 
 			insert into Clients (
@@ -544,29 +540,21 @@ begin
 			@lastName
 		)
 
-		if(@studnetCardID is not null)
+		if(@studentCardID is not null)
 			begin
-				if exists (
-					select * 
-					from Student
-					where StudentCardID = @studnetCardID
-				)
-					begin
-						;throw 52000, 'Ten numer legitymacji istnieje ju¿ w bazie', 1
-					end
-
 				insert into Student (
 					StudentCardID,
 					PersonID
 				)
 				values (
-					@studnetCardID,
+					@studentCardID,
 					@personID
 				)
 			end
+	commit tran addIndividualClient
 	end try
-
-	begin catch 
+	begin catch
+	    rollback tran addIndividualClient
 		declare @errorMsg nvarchar(2048)
 			= 'Cannot add individual client. Error message: '
 			+ error_message();
@@ -577,18 +565,20 @@ go
 
 
 create procedure procedure_addCompany
-	@Phone varchar(9),
-	@Street varchar(50),
-	@CityName varchar(50),
-	@Country varchar(50),
-	@BuildingNumber varchar(10),
-	@Email varchar(50),
+	@CompanyName varchar(50),
 	@Nip varchar(50),
-	@CompanyName varchar(50)
+	@Phone varchar(9),
+	@Email varchar(50),
+
+	@Country varchar(50),
+	@CityName varchar(50),
+	@Street varchar(50),
+	@BuildingNumber varchar(10)
 as
 begin
 	set nocount on
-	begin try 
+	begin try
+	begin tran
 		if (
 			@Phone is null or 
 			@Street is null or
@@ -599,14 +589,7 @@ begin
 			@CompanyName is null
 		)
 			begin
-				;throw 52000, 'Podaj wszystkie parametry', 1
-			end
-		if exists(
-			select * from Clients
-			where Email like @Email
-		)
-			begin
-				;throw 52000, 'Adres email jest juz wykorzystany',1 
+				;throw 52000, 'All arguments are compulsory', 1
 			end
 
 		if not exists (
@@ -660,8 +643,10 @@ begin
 			@CompanyName,
 			@Nip
 		)
+	commit work
 	end try
-	begin catch 
+	begin catch
+	    rollback work
 		declare @errorMessage nvarchar(2048)
 			= 'Cannot add CompanyClient. Error message: '
 			+ error_message();
@@ -678,13 +663,14 @@ create procedure procedure_addIndividualReservation
 as
 begin
 set nocount on
-	begin try 
+	begin try
+	    begin tran addIndividualReservation
 		if (
 			@ClientID is null or
 			@ConferenceID is null
 		)
 		begin
-			;throw 52000, 'Podaj wszystkie parametry', 1
+			;throw 52000, 'All arguments are compulsory', 1
 		end
 		--sprawdzam czy client istnieje
 		if not exists(select * from Clients where ClientID = @ClientID)
@@ -702,35 +688,6 @@ set nocount on
             ;throw 52000, 'Conference does not exists', 1
         end
 
-		--sprawdza czy uzytkownik zrobil rezerwacji na dany dzien konferencji
-
-		if exists (
-		    select * from Reservation as r
-		        inner join DayReservation DR on r.ReservationID = DR.ReservationID
-		        inner join ConferenceDay CD on DR.ConferenceDayID = CD.ConferenceDayID
-		    where CD.ConferenceID = @ConferenceID and r.ClientID = @ClientID
-        )
-		begin
-            ;throw 52000, 'User has already booked this Conference', 1
-        end
-
-	    declare @iterator int = 1;
-		declare @max int = (select count(*) from @DayList);
-		if (@max <= 0)
-		begin
-            ;throw 52000, 'DayList cannot be empty', 1
-        end
-		declare @day date;
-		while (@iterator <= @max)
-		begin
-		    set @day = (select ConferenceDate from @DayList where ID = @iterator)
-            if (dbo.function_returnConferenceDay(
-                @ConferenceID, @day) is null)
-		    begin
-                ;throw 52000, 'Conference day does not exists', 1
-            end
-		    set @iterator = @iterator + 1;
-        end
 		insert into Reservation(
 			ClientID,
 			ReservationDate
@@ -740,17 +697,31 @@ set nocount on
 			GETDATE()
 		)
 		declare @ReservationID int = @@IDENTITY;
-		set @iterator = 1;
+
+		declare @max int = (select count(*) from @DayList);
+		if (@max <= 0)
+		begin
+            ;throw 52000, 'DayList cannot be empty', 1
+        end
+		declare @iterator int = 1;
+		declare @day date;
+
 		while (@iterator <= @max)
 		begin
 		    set @day = (select ConferenceDate from @DayList where ID = @iterator)
-		    declare @ConferenceDayID int = dbo.function_returnConferenceDay (@ConferenceID, @day)
+		    declare @ConferenceDayID int = dbo.function_returnConferenceDay (@ConferenceID, @day);
+		    if (@ConferenceDayID is null)
+		    begin
+                ;throw 52000, 'Conference day does not exists', 1
+            end
             exec procedure_addIndividualDayReservation @ReservationID, @ConferenceDayID;
 		    set @iterator = @iterator + 1;
         end
-	end try
 
+	    commit tran addIndividualReservation
+	end try
 	begin catch
+	    rollback tran addIndividualReservation
 		declare @errorMessage nvarchar(2048)
 			= 'Cannot add Reservation. Error message: '
 			+ error_message();
@@ -772,8 +743,18 @@ begin
 		@DayReservationID is null
 	)
 	begin
-		;throw 52000, 'Podaj wszystkie parametry', 1
+		;throw 52000, 'All arguments are compulsory', 1
 	end
+	if not exists(select * from Person where PersonID = @PersonID)
+	begin
+        ;throw 52000, 'Person does not exists', 1
+    end
+	if not exists(select * from DayReservation where DayReservationID = @DayReservationID)
+	begin
+        ;throw 52000, 'DayReservationID does not exist', 1
+    end
+
+
 	insert into DayParticipant(
 		PersonID,
 		DayReservationID
@@ -805,7 +786,7 @@ begin
 			or @ReservationID is null
 		)
 		begin
-			;throw 52000, 'Podaj wszystkie parametry', 1
+			;throw 52000, 'All arguments are compulsory', 1
 		end
 
 
@@ -853,7 +834,7 @@ begin
 		)
 
 	exec procedure_addDayParticipant @reservationPersonID, @@IDENTITY
-	end try 
+	end try
 	begin catch
 		declare @errorMessage nvarchar(2048)
 			= 'Cannot add DayReservation. Error message: '
@@ -872,6 +853,7 @@ as
 begin
     set nocount on
     begin try
+        begin tran addCompanyReservation
         if (@ClientID is null or @ConferenceID is null)
         begin
             ;throw 52000, 'Podaj wszystkie parametry', 1
@@ -893,53 +875,11 @@ begin
             ;throw 52000, 'Conference does not exists', 1
         end
 
-		--sprawdza czy uzytkownik zrobil rezerwacje na dany dzien konferencji
-		if exists (
-		    select * from Reservation as r
-		        inner join DayReservation DR on r.ReservationID = DR.ReservationID
-		        inner join ConferenceDay CD on DR.ConferenceDayID = CD.ConferenceDayID
-		    where CD.ConferenceID = @ConferenceID and r.ClientID = @ClientID
-        )
-		begin
-            ;throw 52000, 'User has already booked this Conference', 1
-        end
-        declare @NStudent int = (select count(*) from @StudentList);
-        declare @it int = 1;
-        declare @idCard varchar(50);
-        declare @studentDate date;
-        while (@it <= @NStudent)
-        begin
-            set @idCard = (select StudentIDCard from @StudentList where ID = @it)
-            set @studentDate = (select ConferenceDate from @StudentList where ID = @it)
-            if exists(select * from Student where StudentCardID like @idCard)
-            begin
-                ;throw 52000, 'Student id card is not unique', 1;
-            end
-            if not exists (select * from @DayList where ConferenceDate = @studentDate)
-            begin
-                ;throw 52000, 'invalid student date', 1
-            end
-            set @it = @it + 1;
-        end
 
-
-        declare @iterator int =  1;
-        declare @NDay int = (select count(*) from @DayList);
-        if (@NDay <= 0)
+        declare @numberOfDays int = (select count(*) from @DayList);
+        if (@numberOfDays <= 0)
         begin
             ;throw 52000, 'DayList cannot be empty', 1
-        end
-
-        declare @day date;
-        while (@iterator <= @NDay)
-		begin
-		    set @day = (select ConferenceDate from @DayList where ID = @iterator)
-            if (dbo.function_returnConferenceDay(
-                @ConferenceID, @day) is null)
-		    begin
-                ;throw 52000, 'Conference day does not exists', 1
-            end
-		    set @iterator = @iterator + 1;
         end
 
         insert into Reservation(
@@ -947,44 +887,62 @@ begin
             ReservationDate
         ) VALUES (@ClientID, GETDATE())
         declare @ReservationID int = @@IDENTITY
-        set @iterator = 1;
+
+        declare @iterator1 int =  1;
+        declare @iterator2 int;
+
+        declare @date date;
         declare @normalTickets int;
-        declare @ConferenceDayID int;
+        declare @conferenceDayID int;
         declare @StudentTickets int;
-        declare @sIterator int;
+        declare @dayReservationID int;
+
+        declare @numberOfStudents int = (select count(*) from @StudentList);
         declare @studentIDCard varchar(50);
-        declare @DayReservationID int;
-        while (@iterator <= @NDay)
+        declare @studentDate date;
+
+        while (@iterator1 <= @numberOfDays)
         begin
-            set @day = (select ConferenceDate from @DayList where ID = @iterator);
-            set @ConferenceDayID = dbo.function_returnConferenceDay (@ConferenceID, @day)
-            set @normalTickets = (select NormalTickets from @DayList where ID = @iterator);
-            set @studentTickets = (select count(*) from @StudentList where ConferenceDate = @day);
-            exec procedure_addCompanyDayReservation @ReservationID, @ConferenceID, @normalTickets, @StudentTickets
-            set @DayReservationID = @@IDENTITY;
-            set @sIterator = 1;
-            while (@sIterator <= @NStudent)
+            set @date = (select ConferenceDate from @DayList where ID = @iterator1);
+            set @conferenceDayID = dbo.function_returnConferenceDay (@ConferenceID, @date)
+            if (@conferenceDayID is null)
             begin
+                ;throw 52000, 'Conference day does not exist', 1
+            end
+            set @normalTickets = (select NormalTickets from @DayList where ID = @iterator1);
+            set @studentTickets = (select count(*) from @StudentList where ConferenceDate = @date);
+            exec procedure_addCompanyDayReservation @ReservationID, @ConferenceID, @normalTickets, @StudentTickets
+            set @dayReservationID = @@IDENTITY;
+            set @iterator2 = 1;
+            while (@iterator2 <= @numberOfStudents)
+            begin
+                set @studentDate = (select ConferenceDate from @StudentList where ID = @iterator2);
+                if not exists (select * from @DayList where ConferenceDate = @studentDate)
+                begin
+                    ;throw 52000, 'invalid student date', 1
+                end
                 set @studentIDCard = null;
-                set @studentIDCard = (select StudentIDCard from @StudentList where ConferenceDate = @day and ID = @sIterator);
+                set @studentIDCard = (select StudentIDCard from @StudentList where ConferenceDate = @date and ID = @iterator2);
                 if (@studentIDCard is not null and isnumeric(@studentIDCard) = 1)
                 begin
-                    exec procedure_initializeEmployee @DayReservationID, @studentIDCard;
+                    exec procedure_initializeEmployee @dayReservationID, @studentIDCard;
                 end
-                set @sIterator = @sIterator + 1;
+                set @iterator2 = @iterator2 + 1;
             end
 
 
-            set @sIterator = 1;
-            while (@sIterator <= @normalTickets)
+            set @iterator2 = 1;
+            while (@iterator2 <= @normalTickets)
             begin
-                exec procedure_initializeEmployee @DayReservationID, null
-                set @sIterator = @sIterator + 1;
+                exec procedure_initializeEmployee @dayReservationID, null
+                set @iterator2 = @iterator2 + 1;
             end
-            set @iterator = @iterator + 1;
+            set @iterator1 = @iterator1 + 1;
         end
+        commit tran addCompanyReservation
     end try
     begin catch
+        rollback tran addCompanyReservation
 		declare @errorMessage nvarchar(2048)
 			= 'Cannot add Reservation. Error message: '+ error_message();
 		;throw 52000, @errorMessage, 1
@@ -1142,147 +1100,154 @@ begin
 end
 go
 
-create procedure procedure_addWorkshopReservation
-	@WorkshopID int, 
-	@DayReservationID int,
-	@Tickets int
+
+create procedure procedure_addWorkshopIndividualReservation
+    @WorkshopID int,
+    @ClientID int
 as
 begin
-	set nocount on
-	begin try
-		
-		if (@WorkshopID is null or
-			@DayReservationID is null or
-			@Tickets is null
-		)
-		begin
-			;throw 52000, 'Podaj wszystkie dane', 1
-		end
-		
-		if not exists (select * from DayReservation where DayReservationID = @DayReservationID)
-		begin
-			;throw 52000, 'Day Reservation does not exist', 1
-		end
+    set nocount on
+    begin try
+        begin tran addWorkshopIndividualReservation
 
-		if not exists (select * from Workshop where WorkshopID = @WorkshopID)
-		begin
-			;throw 52000, 'Workshop does not exist', 1
-		end
+        if (@WorkshopID is null or @ClientID is null)
+        begin
+            ;throw 52000, 'All arguments are compulsory', 1
+        end
 
-		declare @isIndividual bit;
-		if exists ( 
-			select * from DayReservation as dr 
-			inner join Reservation as r 
-					on dr.ReservationID = r.ReservationID
-			inner join Clients as c
-				on c.ClientID = r.ClientID
-			inner join IndividualClient as ic
-				on ic.ClientID = c.ClientID
-			where DayReservationID = @DayReservationID
-		)
-		begin
-			set @isIndividual = 1;
-		end
-		else
-		begin
-			set @isIndividual = 0;
-		end
+        if not exists(select * from Workshop where WorkshopID = @WorkshopID)
+        begin
+            ;throw 52000, 'Workshop does not exist', 1
+        end
 
-		if (@Tickets <= 0)
-		begin
-			;throw 52000, 'Number of tickets has to be greater than 0', 1
-		end
+        if not exists(select * from Clients where ClientID = @ClientID)
+        begin
+            ;throw 52000, 'Client does not exist', 1
+        end
 
-		if (@isIndividual = 1 and @Tickets <> 1)
-		begin
-			;throw 52000, 'Individual client can buy only one ticket', 1
-		end
+        declare @ConferenceDayID int = (select ConferenceDayID from Workshop where WorkshopID = @WorkshopID)
+        declare @DayReservationID int = (select DayReservationID from DayReservation DR
+            inner join Reservation AS R on R.ReservationID = DR.ReservationID
+            where DR.ConferenceDayID = @ConferenceDayID and R.ClientID = @ClientID)
 
-		insert into WorkshopReservation (
-			WorkshopID,
-			DayReservationID,
-			Tickets
-		)
-		values (
-			@WorkshopID,
-			@DayReservationID,
-			@Tickets
-		)
+        if not exists (select DayReservationID from DayReservation DR
+            inner join Reservation AS R on R.ReservationID = DR.ReservationID
+            where DR.ConferenceDayID = @ConferenceDayID and R.ClientID = @ClientID)
+        begin
+            ;throw 52000, 'User has to book Conference to book a workshop', 1
+        end
 
-	end try
-	begin catch 
-		declare @errorMessage nvarchar(2048)
-			= 'Cannot add WorkshopReservation. Error message: '
-			+ error_message();
-		;throw 52000, @errorMessage, 1
-	end catch
+        if not exists (select * from IndividualClient where ClientID = @ClientID)
+        begin
+            ;throw 52000, 'Invalid ClientID - client is not individual', 1
+        end
+
+        declare @PersonID int = (select PersonID from IndividualClient where ClientID = @ClientID)
+        declare @DayParticipantID int = (select DayParticipantID from DayParticipant
+            inner join Person P on DayParticipant.PersonID = P.PersonID where P.PersonID = @PersonID)
+
+        insert into WorkshopReservation(
+            WorkshopID, DayReservationID, Tickets
+        )VALUES (
+            @WorkshopID, @DayReservationID, 1
+        )
+        declare @WorkshopReservationID int = @@identity;
+        insert into WorkshopParticipant (
+            DayParticipantID, WorkshopReservationID
+        )VALUES(
+            @DayParticipantID, @WorkshopReservationID
+        )
+    commit tran addWorkshopIndividualReservation
+    end try
+    begin catch
+        rollback tran addWorkshopIndividualReservation
+        declare @errorMessage nvarchar(2048)
+            = 'Cannot add WorkshopReservation. Error message: '
+            + error_message();
+        ;throw 52000, @errorMessage, 1
+    end catch
 end
-go
 
-create procedure procedure_addWorkshopParticipant
-	@PersonID int,
-	@WorkshopReservationID int
+create procedure procedure_addWorkshopCompanyReservation
+    @ClientID int,
+    @WorkshopID int,
+    @PersonIDList WorkshopReservation READONLY
 as
 begin
-	set nocount on
-	begin try
-		
-		if (
-			@PersonID is null or
-			@WorkshopReservationID is null
-		)
-		begin
-			;throw 52000, 'Podaj wszystkie dane', 1
-		end
+    set nocount on
+    begin try
+    begin tran addWorkshopCompanyReservation
+        if (@WorkshopID is null or @ClientID is null)
+        begin
+            ;throw 52000, 'All arguments are compulsory', 1
+        end
 
-		if not exists (select * from Person where PersonID = @PersonID)
-		begin
-			;throw 52000, 'Person does not exist', 1
-		end
+        if not exists(select * from Workshop where WorkshopID = @WorkshopID)
+        begin
+            ;throw 52000, 'Workshop does not exist', 1
+        end
 
-		if not exists (select * from WorkshopReservation where WorkshopReservationID = @WorkshopReservationID)
-		begin 
-			;throw 52000, 'WorkshopReservation does not exist', 1
-		end
+        if not exists(select * from Clients where ClientID = @ClientID)
+        begin
+            ;throw 52000, 'Client does not exist', 1
+        end
 
-		 
-		declare @DayReservationID int = (
-			select DayReservationID from WorkshopReservation 
-			where WorkshopReservationID = @WorkshopReservationID
-		)
+        if not exists(select * from Company where @ClientID = ClientID)
+        begin
+            ;throw 52000, 'Client is not company', 1
+        end
 
-		if not exists (
-			select * from DayParticipant
-			where PersonID = @PersonID 
-				and DayReservationID = @DayReservationID
-		)
-		begin 
-			;throw 52000, 'Person cannot be a participant of workshop when Person is not a particiapnt of conference', 1
-		end
+        declare @ConferenceDayID int = (select ConferenceDayID from Workshop where WorkshopID = @WorkshopID)
+        declare @DayReservationID int = (select DayReservationID from DayReservation DR
+            inner join Reservation AS R on R.ReservationID = DR.ReservationID
+            where DR.ConferenceDayID = @ConferenceDayID and R.ClientID = @ClientID)
 
-		declare @DayParticiapntID int = (
-			select DayParticipantID from DayParticipant
-			where PersonID = @PersonID and DayReservationID = @DayReservationID
-		)
+        if not exists (select DayReservationID from DayReservation DR
+            inner join Reservation AS R on R.ReservationID = DR.ReservationID
+            where DR.ConferenceDayID = @ConferenceDayID and R.ClientID = @ClientID)
+        begin
+            ;throw 52000, 'User has to book Conference to book a workshop', 1
+        end
 
-		insert into WorkshopParticipant(
-			DayParticipantID,
-			WorkshopReservationID
-		)
-		values(
-			@DayParticiapntID,
-			@WorkshopReservationID
-		)
+        declare @TicketsNumber int = (select count(*) from @PersonIDList)
 
-	end try
-	begin catch 
-		declare @errorMessage nvarchar(2048)
-			= 'Cannot add Workshop Participant. Error message: '
-			+ error_message();
-		;throw 52000, @errorMessage, 1
-	end catch
-end 
-go
+        insert into WorkshopReservation(
+            WorkshopID, DayReservationID, Tickets
+        )  VALUES (
+            @WorkshopID, @DayReservationID, @TicketsNumber
+        )
+        declare @WorkshopReservation int = @@identity;
+        declare @PersonID int;
+        declare @DayParticipantID int;
+        declare @iterator int = 1;
+        while (@iterator <= @TicketsNumber)
+        begin
+            set @PersonID = (select * from @PersonIDList where ID = @iterator)
+            if not exists(
+                select * from DayParticipant where PersonID = @PersonID and DayReservationID = @DayReservationID
+            )
+            begin
+                ;throw 52000, 'Person is not a participant of Conference in this day', 1
+            end
+            set @DayParticipantID = (select DayParticipantID from DayParticipant where PersonID = @PersonID and DayReservationID = @DayReservationID)
+            insert into WorkshopParticipant(
+                DayParticipantID, WorkshopReservationID
+            ) VALUES (
+                @DayParticipantID, @WorkshopReservation
+            )
+            set @iterator = @iterator + 1
+        end
+    commit tran addWorkshopCompanyReservation
+    end try
+    begin catch
+        rollback tran addWorkshopCompanyReservation
+        declare @errorMessage nvarchar(2048)
+            = 'Cannot add Payment. Error message: '
+            + error_message();
+        ;throw 52000, @errorMessage, 1
+    end catch
+end
+
 
 create procedure procedure_addPayment
 	@ReservationID int
@@ -1327,6 +1292,31 @@ begin
 end
 go
 
+create procedure procedure_removeReservation
+    @ReservationID int
+as
+begin
+    begin try
+    begin tran removeReservation
+    if not exists(
+        select * from Reservation
+        where ReservationID = @ReservationID
+    )
+    begin
+        ;throw 52000, 'Reservation does not exist', 1
+    end
+    delete from Reservation where
+        ReservationID = @ReservationID
+    commit tran removeReservation
+    end try
+    begin catch
+        rollback tran removeReservation
+        declare @errorMessage nvarchar(2048)
+			= 'Cannot delete reservation. Error message: '
+			+ error_message();
+	    ;throw 52000, @errorMessage, 1
+    end catch
+end
 	
 
 

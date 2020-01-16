@@ -14,3 +14,8 @@ create type [dbo].[CompanyReservation] as table (
     ConferenceDate date,
     NormalTickets int
 )
+
+create type [dbo].[WorkshopReservation] as table (
+    ID int identity (1,1),
+    PersonID int
+)
