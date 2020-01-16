@@ -17,22 +17,8 @@ declare @StudentList StudentIDCards;
 insert into @StudentList (ConferenceDate, StudentIDCard)VALUES ('2021-09-01', '132')
 insert into @StudentList (ConferenceDate, StudentIDCard)VALUES ('2021-09-11', '33231276')
 exec procedure_addCompanyReservation 3, 1, @DayList, @StudentList
-select * from Reservation
-select * from DayReservation
 
-select * from Employee
-select * from Student
-select * from DayParticipant
-select * from Student
+exec procedure_addConference 'Edukacja', 'opis', '2021-07-20', '2021-07-25', 'Krakow',
+    'Polska', 'Dluga', '2', 0.1, '300', 200
 
-select * from Reservation
-select * from DayReservation
-select * from Employee
-
-
-
-select * from DayParticipant
-select * from Reservation
-select * from DayReservation
-select * from DayParticipant
-select * from IndividualClient
+select * from Conferences

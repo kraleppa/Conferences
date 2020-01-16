@@ -44,7 +44,7 @@ create function function_workshopsDuringConference(@conf_id int)
 				on w.ConferenceDayID = cd.ConferenceDayID
 			inner join WorkshopDictionary as wd 
 				on wd.WorkshopDictionaryID = w.WorkshopDictionaryID
-		where conf.Cancelled = 0 and w.Cancelled = 0 and conf.ConferenceID = @conf_id
+		where conf.ConferenceID = @conf_id
 	)
 go
 
@@ -265,8 +265,7 @@ create function function_returnNormalTicketCost(@reservationID int)
 				left outer join Prices as p
 					on p.ConferenceID = c.ConferenceID and 
 						p.StartDate in (
-						    select p2.StartDate,
-						           min(datediff(d, p2.StartDate, @reservationDate))
+						    select p2.StartDate
 						    from Prices as p2
 						    where p2.ConferenceID = c.ConferenceID
 						    group by p2.StartDate
@@ -302,7 +301,7 @@ create function function_returnStudentTicketCost(@reservationID int)
 				left outer join Prices as p
 					on p.ConferenceID = c.ConferenceID and 
 						p.StartDate in (
-						    select p2.StartDate, min(datediff(d, p2.StartDate, @reservationDate))
+						    select p2.StartDate
 						    from Prices as p2
 						    where p2.ConferenceID = c.ConferenceID
 						    group by p2.StartDate
@@ -590,7 +589,7 @@ create function function_generateCompanyInvoice(@reservationID int)
         select 'Zarezerwowane warsztaty w ramach konferencji' as Faktura
         union all
 
-        select concat(WD.WorkshopName, n', Dzien: ', CD.ConferenceDate, ', ',
+        select concat(WD.WorkshopName, ', Dzien: ', CD.ConferenceDate, ', ',
                       W.StartTime, ' - ', W.EndTime , ', Cena: ', wr.Tickets*W.Price) as Faktura
 
         from DayReservation as dr

@@ -26,13 +26,6 @@ CREATE VIEW view_cancelledWorkshop as
 go
 
 
-CREATE VIEW view_cancelledConferences as
-	select ConferenceName, ConferenceDescription, StartDate, EndDate
-	from Conferences
-	where Cancelled = 1
-go
-
-
 --limit i wolne miejsca na nadchodzace konferencje (na kazdy dzien)
 CREATE VIEW view_conferencesSeatsLeft as
 	select c.ConferenceID, c.ConferenceName, c.Limit, cd.ConferenceDate, 
@@ -47,7 +40,7 @@ CREATE VIEW view_conferencesSeatsLeft as
 	from Conferences as c 
 		inner join ConferenceDay as cd 
 			on cd.ConferenceID = c.ConferenceID
-	where c.StartDate > getdate() and c.Cancelled = 0
+	where c.StartDate > getdate()
 go
 
 
@@ -76,7 +69,8 @@ CREATE VIEW view_workshopDictionary as
 		from WorkshopDictionary as wd
 go
 
-
+--fix here
+/*
 --informacje o nadchodzacyh konferencjach
 CREATE VIEW view_conferencesInfo as
 	select c.ConferenceName, c.ConferenceDescription, c.limit, c.StartDate, c.EndDate, 
@@ -88,9 +82,9 @@ CREATE VIEW view_conferencesInfo as
 		inner join Country as co on co.CountryID = ci.CountryID
 		left outer join prices as p on p.ConferenceID = c.ConferenceID and 
 			GETDATE() between p.StartDate and p.EndDate 
-	where c.StartDate >= getdate() and c.Cancelled = 0
+	where c.StartDate >= getdate()
 go
-
+*/
 
 --wyswietla rezerwacje ktore powinny zostac usuniete
 CREATE VIEW view_reservationOnConferenceToDelete as 

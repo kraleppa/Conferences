@@ -1163,6 +1163,7 @@ begin
         ;throw 52000, @errorMessage, 1
     end catch
 end
+go
 
 create procedure procedure_addWorkshopCompanyReservation
     @ClientID int,
@@ -1218,7 +1219,7 @@ begin
         declare @iterator int = 1;
         while (@iterator <= @TicketsNumber)
         begin
-            set @PersonID = (select * from @PersonIDList where ID = @iterator)
+            set @PersonID = (select PersonID from @PersonIDList where ID = @iterator)
             if not exists(
                 select * from DayParticipant where PersonID = @PersonID and DayReservationID = @DayReservationID
             )
@@ -1243,7 +1244,7 @@ begin
         ;throw 52000, @errorMessage, 1
     end catch
 end
-
+go
 
 create procedure procedure_addPayment
 	@ReservationID int
@@ -1313,6 +1314,7 @@ begin
 	    ;throw 52000, @errorMessage, 1
     end catch
 end
+go
 	
 
 

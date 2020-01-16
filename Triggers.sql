@@ -1,3 +1,4 @@
+
 --blokuje mozliwosc zrobeninia 2 rezerwacji przez tego samego clienta na jedna konferencje
 create trigger trigger_conferenceReservationAlreadyExists
     on DayReservation
@@ -20,7 +21,7 @@ begin
             ;throw 50001, 'User has already booked this Conference', 1
         end
 end
-
+go
 --blokuje mozliwosc dokonania rezerwacji konferencji jezeli uzytkownik probuje przekoroczyc limit
 
 create trigger trigger_conferenceReservationLimit
@@ -46,7 +47,7 @@ begin
         ;throw 50001, 'Too few free places to book day', 1
     end
 end
-
+go
 --blokuje mozliwosc zarezerwowania warsztatu wiecej niz raz przez tego samego klienta
 create trigger trigger_workshopReservationAlreadyExists
     on WorkshopReservation
@@ -67,6 +68,7 @@ as
             ;throw 50001, 'Client has already booked this Workshop', 1
         end
     end
+go
 --blokuje mozliwosc zarezerwowania warsztatu jezeli limit ma zostac przekorczony
 create trigger trigger_workshopReservationLimit
     on WorkshopReservation
@@ -87,7 +89,7 @@ as
             ;throw 50001, 'Too few places to book workshop', 1
         end
     end
-
+go
 --blokuje mozliwosc zarezerwowania warsztatu jezeli osobie nachodza sie warsztaty
 create trigger trigger_participantTakesPartInOverlappingWorkshops
     on WorkshopParticipant
@@ -98,7 +100,7 @@ as
         declare @WorkshopReservationID int = (select WorkshopReservationID from inserted)
         declare @DayParticipantID int = (select DayParticipantID from inserted)
         declare @WorkshopID int = (
-            select @WorkshopID from WorkshopReservation as WR
+            select WR.WorkshopID from WorkshopReservation as WR
                 inner join Workshop W on WR.WorkshopID = W.WorkshopID
                 where WR.WorkshopReservationID = @WorkshopReservationID
         )
@@ -121,6 +123,7 @@ as
             ;throw 50001, 'Workshops are overlapping', 1
         end
     end
+go
 
 create trigger trigger_deleteDayReservationAfterDeletingReservation
     on Reservation
@@ -133,6 +136,7 @@ as
                 select ReservationID from deleted
         )
     end
+go
 
 create trigger trigger_deleteDayParticipantAfterDeletingDayReservation
     on DayReservation
@@ -145,6 +149,7 @@ as
                     select DayReservationID from deleted
                 )
     end
+go
 
 create trigger trigger_deleteNULLEmployeeAfterDeletingDayParticipant
     on DayParticipant
@@ -157,6 +162,7 @@ as
                 select PersonID from deleted
             ) and FirstName is null and LastName is null
     end
+go
 
 create trigger trigger_deletePersonAfterDeletingNULLEmployees
     on Employee
@@ -169,6 +175,7 @@ as
             select PersonID from deleted
         )
     end
+go
 
 create trigger trigger_deleteStudentAfterDeletingPerson
     on Person
@@ -181,6 +188,7 @@ as
                 select PersonID from deleted
         )
     end
+go
 
 create trigger trigger_deleteWorkshopReservationAfterDeletingDayReservation
     on DayReservation
@@ -193,6 +201,8 @@ as
                 select DayReservationID from deleted
             )
     end
+go
+
 
 create trigger trigger_deleteWorkshopParticipantsAfterDeletingWorkshopReservation
     on WorkshopReservation
@@ -205,5 +215,6 @@ as
                 select WorkshopReservationID from deleted
             )
     end
+go
 
 
