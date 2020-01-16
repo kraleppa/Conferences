@@ -30,13 +30,13 @@ go
 CREATE VIEW view_conferencesSeatsLeft as
 	select c.ConferenceID, c.ConferenceName, c.Limit, cd.ConferenceDate, 
 		c.Limit -
-		((select sum(dr.NormalTickets)
+		isnull(((select sum(dr.NormalTickets)
 			from DayReservation as dr 
 			where dr.ConferenceDayID = cd.ConferenceDayID)
 		+
 		(select sum(dr.StudentTickets)
 			from DayReservation as dr 
-			where dr.ConferenceDayID = cd.ConferenceDayID)) as 'Wolne miejsca'
+			where dr.ConferenceDayID = cd.ConferenceDayID)), 0) as 'Wolne miejsca'
 	from Conferences as c 
 		inner join ConferenceDay as cd 
 			on cd.ConferenceID = c.ConferenceID
