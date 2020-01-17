@@ -112,6 +112,55 @@ begin
 end
 go
 
+
+create procedure procedure_addCompanyDayReservation
+	@ReservationID int,
+    @ConferenceDayID int,
+	@NormalTickets int,
+	@StudentTickets int
+as
+begin
+	set nocount on
+	begin try
+		if (
+			@ReservationID is null or
+			@ConferenceDayID is null or
+			@NormalTickets is null or
+			@StudentTickets is null
+		)
+		begin
+			;throw 52000, 'Podaj wszystkie parametry', 1
+		end
+
+		if (@ConferenceDayID is null)
+		begin
+			;throw 52000, 'Conference does not exist', 1
+		end
+
+		insert into DayReservation(
+			ConferenceDayID,
+			ReservationID,
+			NormalTickets,
+			StudentTickets
+		)
+		values(
+			@ConferenceDayID,
+			@ReservationID,
+			@NormalTickets,
+			@StudentTickets
+		)
+	end try
+	begin catch
+		declare @errorMessage nvarchar(2048)
+			= 'Cannot add DayReservation. Error message: '+ error_message();
+		;throw 52000, @errorMessage, 1
+	end catch
+end
+go
+
+
+
+
 create procedure procedure_initializeEmployee
     @ClientID int,
     @StudentIDCard varchar(50)
@@ -232,6 +281,8 @@ begin
                 ;throw 52000, 'Reservation does not exist', 1
             end
 
+
+
             declare @ConferenceID int = (
                 select TOP 1 ConferenceID from Reservation
                     inner join DayReservation DR on Reservation.ReservationID = DR.ReservationID
@@ -242,6 +293,7 @@ begin
             declare @NameListLength int = (select count(*) from @NameList)
             declare @ConferenceListLength int = (select count(*) from @ConferenceList)
             declare @WorkshopListLength int = (select count(*) from @WorkshopList)
+
 
             declare @iterator1 int = 1;
             declare @StudentIDCard varchar(50);
