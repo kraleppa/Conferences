@@ -664,3 +664,25 @@ create function function_showEmployees(@CompanyID int)
         where c.ClientID = @CompanyID
     )
 go
+
+
+--wolne miesjca na dana konferencje (na poszczegolne dni)
+create function function_showFreeSeatsForConference(@conferenceID int)
+    returns table
+    as
+    return (
+        select c.ConferenceID, c.ConferenceName, c.Limit, cd.ConferenceDate,
+		c.Limit -
+		isnull(((select sum(dr.NormalTickets)
+			from DayReservation as dr
+			where dr.ConferenceDayID = cd.ConferenceDayID)
+		+
+		(select sum(dr.StudentTickets)
+			from DayReservation as dr
+			where dr.ConferenceDayID = cd.ConferenceDayID)), 0) as 'Wolne miejsca'
+	from Conferences as c
+		inner join ConferenceDay as cd
+			on cd.ConferenceID = c.ConferenceID
+	where c.ConferenceID = @conferenceID
+    )
+go

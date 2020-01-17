@@ -45,11 +45,12 @@ CREATE TABLE Conferences (
     ConferenceDescription varchar(255)  NOT NULL,
     StartDate date  NOT NULL,
     EndDate date  NOT NULL,
-		check([EndDate] > [StartDate]),
+		check([EndDate] >= [StartDate]),
     CityID int  NOT NULL,
     Street varchar(50)  NOT NULL,
     BuildingNumber varchar(10)  NOT NULL,
     StudentDiscount real NULL default 0,
+        check([StudentDiscount] >= 0 and [StudentDiscount] < 1),
     Limit int  NOT NULL,
 		check([Limit] > 0),
     BasePrice money  NOT NULL,
@@ -88,7 +89,7 @@ CREATE TABLE DayReservation (
 -- Table: Employee
 CREATE TABLE Employee (
     ClientID int  NOT NULL,
-    PersonID int  NOT NULL,
+    PersonID int unique NOT NULL,
     FirstName varchar(50)  NULL,
     LastName varchar(50)  NULL,
     CONSTRAINT Employee_pk PRIMARY KEY  (PersonID)
