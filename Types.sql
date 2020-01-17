@@ -19,3 +19,22 @@ create type [dbo].[WorkshopReservation] as table (
     ID int identity (1,1),
     PersonID int
 )
+
+create type [dbo].[NamesTable] as table (
+    IDOsoby int identity (1,1),
+    Imie varchar(50),
+    Nazwisko  varchar(50),
+    Legitymacja varchar(50)
+)
+
+create type [dbo].[ConferenceTable] as table (
+    ID int identity (1,1),
+    IDOsoby int,
+    Data date
+)
+
+create type [dbo].[WorkshopTable] as table (
+    ID int identity (1,1),
+    IDOsoby int,
+    WorkshopID int
+)

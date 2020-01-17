@@ -201,3 +201,196 @@ begin
     end catch
 end
 go
+
+create procedure procedure_addCompanyEmployeeInformation
+    @ClientID int,
+    @ReservationID int,
+    @NameList NamesTable READONLY,
+    @ConferenceList ConferenceTable READONLY,
+    @WorkshopList WorkshopTable READONLY
+as
+begin
+    set nocount on
+    begin try
+        begin tran addCompanyEmployeeInformation
+
+            if not exists(select * from Clients where ClientID = @ClientID)
+            begin
+                ;throw 52000, 'Client does not exist', 1
+            end
+
+            if not exists(select * from Company where ClientID = @ClientID)
+            begin
+                ;throw 52000, 'Client is not a company', 1
+            end
+
+            if not exists (
+                select * from Reservation
+                where  ClientID = @ClientID and ReservationID = @ReservationID
+            )
+            begin
+                ;throw 52000, 'Reservation does not exist', 1
+            end
+
+            declare @ConferenceID int = (
+                select TOP 1 ConferenceID from Reservation
+                    inner join DayReservation DR on Reservation.ReservationID = DR.ReservationID
+                    inner join ConferenceDay CD on DR.ConferenceDayID = CD.ConferenceDayID
+                where Reservation.ReservationID = @ReservationID
+            )
+
+            declare @NameListLength int = (select count(*) from @NameList)
+            declare @ConferenceListLength int = (select count(*) from @ConferenceList)
+            declare @WorkshopListLength int = (select count(*) from @WorkshopList)
+
+            declare @iterator1 int = 1;
+            declare @StudentIDCard varchar(50);
+            while (@iterator1 <= @NameListLength)
+            begin
+                set @StudentIDCard = (select Legitymacja from @NameList where IDOsoby = @iterator1)
+                if (@StudentIDCard is not null)
+                begin
+                    if not exists(select * from Student where StudentCardID = @StudentIDCard)
+                    begin
+                        ;throw 52000, 'StudentIDCard does not exist in data base', 1
+                    end
+                end
+                set @iterator1 = @iterator1 + 1;
+            end
+
+            set @iterator1 = 1;
+            declare @IDOsoby int;
+            declare @Data date;
+            while (@iterator1 <= @ConferenceListLength)
+            begin
+                set @IDOsoby = (select IDOsoby from @ConferenceList where ID = @iterator1)
+                if not exists(select * from @NameList where IDOsoby = @IDOsoby)
+                begin
+                    ;throw 52000, 'Argument table error', 1
+                end
+
+                set @Data = (select Data from @ConferenceList where ID = @iterator1)
+                if (dbo.function_returnConferenceDay(@ConferenceID, @Data) is null)
+                begin
+                    ;throw 52000, 'Conference does not take place in this day', 1
+                end
+
+                set @iterator1 =  @iterator1 + 1;
+            end
+
+            set @iterator1 = 1;
+            declare @WorkshopID int;
+            while (@iterator1 <= @WorkshopListLength)
+            begin
+                set @IDOsoby = (select IDOsoby from @WorkshopList where ID = @iterator1)
+                if not exists(select * from @NameList where IDOsoby = @IDOsoby)
+                begin
+                    ;throw 52000, 'Argument table error', 1
+                end
+
+                set @WorkshopID = (select WorkshopID from @WorkshopList where ID = @iterator1)
+                if not exists (select * from Workshop
+                    inner join ConferenceDay C on Workshop.ConferenceDayID = C.ConferenceDayID
+                    where WorkshopID = @WorkshopID and ConferenceID = @ConferenceID
+                )
+                begin
+                    ;throw 52000, 'Workshop does not exist', 1
+                end
+                set @iterator1 = @iterator1 + 1;
+            end
+
+            --zaczynam dodawac uczestnikow
+            declare @FirstName varchar(50);
+            declare @LastName varchar(50);
+            declare @PersonID int;
+            declare @ConferenceDayReservation int;
+            declare @WorkshopReservation int;
+            declare @DayParticipantID int;
+
+            declare @iterator2 int;
+            set @iterator1 = 1;
+            while (@iterator1 <= @NameListLength)
+            begin
+                --aktualizuje informacje o pracownikach
+                set @StudentIDCard = (select Legitymacja from @NameList where IDOsoby = @iterator1)
+                set @FirstName = (select Imie from @NameList where IDOsoby = @iterator1)
+                set @LastName = (select Nazwisko from @NameList where IDOsoby = @iterator1)
+                set @IDOsoby = @iterator1;
+                if (@StudentIDCard is null)
+                begin
+                    insert into Person default values
+                    set @PersonID = @@IDENTITY;
+                    insert into Employee(ClientID, PersonID, FirstName, LastName)
+                    VALUES (@ClientID, @PersonID, @FirstName, @LastName)
+                end
+                else
+                begin
+                    set @PersonID = (select PersonID from Student where StudentCardID = @StudentIDCard)
+                    update Employee
+                    set FirstName = @FirstName, LastName = @LastName
+                    where PersonID = @PersonID
+                end
+
+                --dodaje osobe do rezerwacji dnia
+                set @iterator2 = 1;
+                while (@iterator2 <= @ConferenceListLength)
+                begin
+                    if exists(select * from @ConferenceList where ID = @iterator2 and IDOsoby = @IDOsoby)
+                    begin
+                        set @Data = (select Data from @ConferenceList where ID = @iterator2 and IDOsoby = @IDOsoby)
+                        set @ConferenceDayReservation = (select DayReservationID from DayReservation
+                            inner join ConferenceDay D on DayReservation.ConferenceDayID = D.ConferenceDayID
+                            where ReservationID = @ReservationID and ConferenceDate = @Data
+                            )
+                        insert into DayParticipant(PersonID, DayReservationID)
+                        VALUES (@PersonID, @ConferenceDayReservation)
+                    end
+                    set @iterator2 = @iterator2 + 1;
+                end
+
+                --dodaje osobe do rezerwacji warsztatu
+                set @iterator2 = 1;
+                while (@iterator2 <= @WorkshopListLength)
+                begin
+                    if exists (select * from @WorkshopList where ID = @iterator2 and IDOsoby = @IDOsoby)
+                    begin
+                        set @WorkshopID = (select WorkshopID from @WorkshopList where ID = @iterator2 and IDOsoby = @IDOsoby)
+                        set @WorkshopReservation = (select WorkshopReservationID from WorkshopReservation
+                            inner join DayReservation DR2 on WorkshopReservation.DayReservationID = DR2.DayReservationID
+                            where ReservationID = @ReservationID and WorkshopID = @WorkshopID
+                            )
+                        if not exists (select * from WorkshopReservation WR
+                            inner join DayReservation DR3 on WR.DayReservationID = DR3.DayReservationID
+                            inner join DayParticipant DP on DR3.DayReservationID = DP.DayReservationID
+                            where ReservationID = @ReservationID and PersonID = @PersonID)
+                        begin
+                            ;throw 52000, 'User is not Day Participant', 1
+                        end
+
+                        set @DayParticipantID = (select DayParticipantID from WorkshopReservation WR
+                            inner join DayReservation DR3 on WR.DayReservationID = DR3.DayReservationID
+                            inner join DayParticipant DP on DR3.DayReservationID = DP.DayReservationID
+                            where ReservationID = @ReservationID and PersonID = @PersonID)
+
+                        insert into WorkshopParticipant(DayParticipantID, WorkshopReservationID)
+                        VALUES (@DayParticipantID, @WorkshopReservation)
+                    end
+                    set @iterator2 = @iterator2 + 1;
+                end
+
+                set @iterator1 = @iterator1 + 1;
+            end
+
+
+
+        commit tran addCompanyEmployeeInformation
+    end try
+    begin catch
+        rollback tran addCompanyEmployeeInformation
+        declare @errorMessage nvarchar(2048)
+            = 'Cannot add informations about employees. Error message: '
+            + error_message();
+        ;throw 52000, @errorMessage, 1
+    end catch
+end
+go

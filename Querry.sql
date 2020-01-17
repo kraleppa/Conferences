@@ -29,6 +29,39 @@ select * from WorkshopReservation
 
 exec procedure_addCompanyReservation 1, 1, @DayList, @StudentList
 
-select * from Reservation inner join DayReservation DR on Reservation.ReservationID = DR.ReservationID
 
-select * from Student
+select  * from dbo.function_reservationSummary(1)
+
+declare @NameList NamesTable
+declare @ConferenceList ConferenceTable
+declare @WorkshopList WorkshopTable
+
+insert into @NameList(Imie, Nazwisko, Legitymacja)
+VALUES ('Krzysztof', 'Nalepa', '305376')
+insert into @NameList(Imie, Nazwisko, Legitymacja)
+VALUES ('Jan', 'Kowalski', null)
+insert into @NameList(Imie, Nazwisko, Legitymacja)
+VALUES ('Marcin', 'Nowak', null)
+
+insert into @ConferenceList (IDOsoby, Data)
+VALUES(1, '2021-07-20')
+insert into @ConferenceList (IDOsoby, Data)
+VALUES(1, '2021-07-21')
+insert into @ConferenceList (IDOsoby, Data)
+VALUES(2, '2021-07-20')
+insert into @ConferenceList (IDOsoby, Data)
+VALUES(2, '2021-07-21')
+insert into @ConferenceList (IDOsoby, Data)
+VALUES(3, '2021-07-20')
+insert into @ConferenceList (IDOsoby, Data)
+VALUES(3, '2021-07-21')
+
+insert into @WorkshopList (IDOsoby, WorkshopID)
+VALUES (1, 1)
+insert into @WorkshopList (IDOsoby, WorkshopID)
+VALUES (2, 1)
+
+exec procedure_addCompanyEmployeeInformation 1, 1,
+    @NameList, @ConferenceList, @WorkshopList
+
+select * from Employee inner join Person P on Employee.PersonID = P.PersonID inner join DayParticipant DP on P.PersonID = DP.PersonID inner join WorkshopParticipant WP on DP.DayParticipantID = WP.DayParticipantID
