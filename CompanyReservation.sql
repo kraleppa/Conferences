@@ -143,3 +143,61 @@ begin
     end catch
 end
 
+create procedure procedure_addWorkshopCompanyReservation
+    @ClientID int,
+    @WorkshopID int,
+    @NormalTickets int
+as
+begin
+    set nocount on
+    begin try
+    begin tran addWorkshopCompanyReservation
+
+        if (@WorkshopID is null or @ClientID is null or @NormalTickets is null)
+        begin
+            ;throw 52000, 'All arguments are compulsory', 1
+        end
+
+        if not exists(select * from Workshop where WorkshopID = @WorkshopID)
+        begin
+            ;throw 52000, 'Workshop does not exist', 1
+        end
+
+        if not exists(select * from Clients where ClientID = @ClientID)
+        begin
+            ;throw 52000, 'Client does not exist', 1
+        end
+
+        if not exists(select * from Company where @ClientID = ClientID)
+        begin
+            ;throw 52000, 'Client is not company', 1
+        end
+        declare @ConferenceDayID int = (select ConferenceDayID from Workshop where WorkshopID = @WorkshopID)
+
+        if not exists (select DayReservationID from DayReservation DR
+            inner join Reservation AS R on R.ReservationID = DR.ReservationID
+            where DR.ConferenceDayID = @ConferenceDayID and R.ClientID = @ClientID)
+        begin
+            ;throw 52000, 'User has to book Conference to book a workshop', 1
+        end
+
+        declare @DayReservationID int = (select DayReservationID from DayReservation DR
+            inner join Reservation AS R on R.ReservationID = DR.ReservationID
+            where DR.ConferenceDayID = @ConferenceDayID and R.ClientID = @ClientID)
+
+        insert into WorkshopReservation(
+            WorkshopID, DayReservationID, Tickets
+        )  VALUES (
+            @WorkshopID, @DayReservationID, @NormalTickets
+        )
+    commit tran addWorkshopCompanyReservation
+    end try
+    begin catch
+        rollback tran addWorkshopCompanyReservation
+        declare @errorMessage nvarchar(2048)
+            = 'Cannot addReservation. Error message: '
+            + error_message();
+        ;throw 52000, @errorMessage, 1
+    end catch
+end
+go

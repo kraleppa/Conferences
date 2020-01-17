@@ -14,7 +14,15 @@ declare @StudentList StudentIDCards
 insert into @StudentList(ConferenceDate, StudentIDCard)VALUES('2021-07-20','305376')
 insert into @StudentList(ConferenceDate, StudentIDCard)VALUES('2021-07-21','305376')
 
+exec procedure_addWorkshopToDictionary 'Java', 'opis', 20
 
+exec procedure_addWorkshop 1, '2021-07-20', 1, '09:00:00',
+    '10:00:00', 20
+
+
+exec  procedure_addWorkshopCompanyReservation 1, 1, 2
+
+select * from WorkshopReservation
 
 
 
