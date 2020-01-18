@@ -11,8 +11,12 @@ select * from Clients as c
 inner join Company as c2 on c.ClientID = c2.ClientID
 order by 1
 
+select * from function_
 
+select * from reservation where ClientID = 2
 
+select * from function_reservationSummary (581)
 
+select * from DayReservation
 
-select * from ConferenceDay
+select * from Clients
