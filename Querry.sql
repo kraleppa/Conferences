@@ -10,30 +10,32 @@ exec procedure_addCompany 'Awiteks', '203677888', '502758927',
 
 exec procedure_addWorkshopToDictionary 'Java', 'opis', 20
 
-exec procedure_addWorkshop 1, '2021-07-20', 1, '09:00:00',
+exec procedure_addWorkshop 1, '2022-07-20', 1, '09:00:00',
     '10:00:00', 20
 
+exec procedure_addIndividualClient 'Barto', 'Szar', '666696888',
+    'BartoSz@gmial.com', '502765', 'Polska',
+    'Targowica', 'Bartoszowa', '60'
 
-exec  procedure_addWorkshopCompanyReservation 1, 1, 2
+declare @DayListI IndividualReservation;
+insert into @DayListI (ConferenceDate)VALUES ('2022-7-20')
 
-select * from WorkshopReservation
+exec procedure_addIndividualReservation 1, 1, @DayListI
+
+select * from Reservation
 
 declare @DayList CompanyReservation
-insert into @DayList(ConferenceDate, NormalTickets)VALUES('2022-07-20',  2)
-insert into @DayList(ConferenceDate, NormalTickets)VALUES('2022-07-21',  2)
-
+insert into @DayList(ConferenceDate, NormalTickets)VALUES('2022-07-20',  10)
 declare @StudentList StudentIDCards
-insert into @StudentList(ConferenceDate, StudentIDCard)VALUES('2021-07-20','305376')
-insert into @StudentList(ConferenceDate, StudentIDCard)VALUES('2021-07-21','305376')
 
+exec procedure_addCompanyReservation 2, 1, @DayList, @StudentList
 
-exec procedure_addCompanyReservation 1, 2, @DayList, @StudentList
+exec procedure_addWorkshopCompanyReservation 2, 3, 2
 
-exec
+delete from Reservation where ReservationID = 10
 
-select * from Student
-
-select  * from dbo.function_reservationSummary(1)
+select  * from dbo.function_reservationSummary(3)
+select * from Conferences
 
 declare @NameList NamesTable
 declare @ConferenceList ConferenceTable
@@ -56,16 +58,31 @@ insert into @ConferenceList (IDOsoby, Data)
 VALUES(2, '2022-07-21')
 insert into @ConferenceList (IDOsoby, Data)
 VALUES(3, '2022-07-20')
-
 insert into @ConferenceList (IDOsoby, Data)
 VALUES(3, '2022-07-21')
 
-exec procedure_addCompanyEmployeeInformation 1, 2,
+exec procedure_addCompanyEmployeeInformation 1, 5,
     @NameList, @ConferenceList, @WorkshopList
 
-select * from DayReservation inner join DayParticipant DP on DayReservation.DayReservationID = DP.DayReservationID
-order by 1
+select * from Employee inner join Person P on Employee.PersonID = P.PersonID inner join Student S on P.PersonID = S.PersonID
+
+delete from Reservation where ReservationID = 1
 
 select * from Employee
 
-exec procedure_addWorkshop 1, '2021-07-20', 1, '09:00:00', '10:00:00', 5000
+
+select * from function_participantListForConference (1)
+
+select * from Workshop
+
+
+exec procedure_addWorkshop 1, '2022-07-20', 1,
+    '08:00:00', '11:00:00', 1
+
+exec procedure_addWorkshopIndividualReservation 1, 2
+exec procedure_addWorkshopIndividualReservation 2, 1
+
+delete from Reservation where ReservationID = 1
+
+
+select * from function_reservationSummary (12)

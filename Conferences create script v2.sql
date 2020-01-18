@@ -210,7 +210,7 @@ ALTER TABLE Conferences ADD CONSTRAINT Conferences_City
 -- Reference: DayParticipant_DayReservation (table: DayParticipant)
 ALTER TABLE DayParticipant ADD CONSTRAINT DayParticipant_DayReservation
     FOREIGN KEY (DayReservationID)
-    REFERENCES DayReservation (DayReservationID);
+    REFERENCES DayReservation (DayReservationID) on delete cascade ;
 
 -- Reference: DayParticipant_Person (table: DayParticipant)
 ALTER TABLE DayParticipant ADD CONSTRAINT DayParticipant_Person
@@ -225,7 +225,7 @@ ALTER TABLE DayReservation ADD CONSTRAINT DayReservation_ConferenceDay
 -- Reference: DayReservation_Reservation (table: DayReservation)
 ALTER TABLE DayReservation ADD CONSTRAINT DayReservation_Reservation
     FOREIGN KEY (ReservationID)
-    REFERENCES Reservation (ReservationID);
+    REFERENCES Reservation (ReservationID) on delete cascade ;
 
 -- Reference: Employee_Company (table: Employee)
 ALTER TABLE Employee ADD CONSTRAINT Employee_Company
@@ -265,7 +265,7 @@ ALTER TABLE Student ADD CONSTRAINT Student_Person
 -- Reference: WorkshopParticipant_DayParticipant (table: WorkshopParticipant)
 ALTER TABLE WorkshopParticipant ADD CONSTRAINT WorkshopParticipant_DayParticipant
     FOREIGN KEY (DayParticipantID)
-    REFERENCES DayParticipant (DayParticipantID);
+    REFERENCES DayParticipant (DayParticipantID) on delete cascade ;
 
 -- Reference: WorkshopParticipant_WorkshopReservation (table: WorkshopParticipant)
 ALTER TABLE WorkshopParticipant ADD CONSTRAINT WorkshopParticipant_WorkshopReservation
@@ -275,7 +275,7 @@ ALTER TABLE WorkshopParticipant ADD CONSTRAINT WorkshopParticipant_WorkshopReser
 -- Reference: WorkshopReservation_DayReservation (table: WorkshopReservation)
 ALTER TABLE WorkshopReservation ADD CONSTRAINT WorkshopReservation_DayReservation
     FOREIGN KEY (DayReservationID)
-    REFERENCES DayReservation (DayReservationID);
+    REFERENCES DayReservation (DayReservationID) on delete cascade ;
 
 -- Reference: WorkshopReservation_Workshop (table: WorkshopReservation)
 ALTER TABLE WorkshopReservation ADD CONSTRAINT WorkshopReservation_Workshop

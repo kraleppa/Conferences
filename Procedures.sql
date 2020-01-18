@@ -969,4 +969,43 @@ end
 go
 
 
+create procedure procedure_deleteReservation
+    @ReservationID int
+as
+    begin
+        set nocount on
+        begin try
+            begin tran deleteReservation
+                delete from Reservation where ReservationID = @ReservationID
+            commit tran deleteReservation
+        end try
+        begin catch
+            rollback tran deleteReservation
+            declare @errorMessage nvarchar(2048)
+			= 'Cannot delete reservation. Error message: '
+			+ error_message();
+		;throw 52000, @errorMessage, 1
+        end catch
+    end
+go
+
+create procedure procedure_deleteUnpaidReservation
+as
+    begin
+        set nocount on
+        begin try
+            begin tran deleteReservations
+            delete from Reservation where ReservationID in
+            (select view_reservationOnConferenceToDelete.ReservationID from view_reservationOnConferenceToDelete)
+            commit tran deleteReservations
+        end try
+        begin catch
+            rollback tran deleteReservations
+            declare @errorMessage nvarchar(2048)
+			= 'Cannot delete unpaid reservations. Error message: '
+			+ error_message();
+		;throw 52000, @errorMessage, 1
+        end catch
+    end
+
 

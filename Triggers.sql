@@ -145,6 +145,7 @@ as
             ;throw 50001, 'Workshop limit cannot be bigger than ConferenceLimit', 1
         end
     end
+go
 
 --blokuje mozliwosc zarezerwowania wiekszej ilosci osob na warsztat niz liczba osob zarezerwowanych na konferencje
 create trigger trigger_workshopTicketsNumberLessThanConferenceTicketsNumber
@@ -162,98 +163,8 @@ as
             ;throw 50001, 'Workshop reservation cannot have more Tickets than Confernce day Reservation', 1
         end
     end
-
-
-
-
-create trigger trigger_deleteDayReservationAfterDeletingReservation
-    on Reservation
-    after delete
-as
-    begin
-        set nocount on
-        Delete from DayReservation
-            where ReservationID IN (
-                select ReservationID from deleted
-        )
-    end
-go
-
-create trigger trigger_deleteDayParticipantAfterDeletingDayReservation
-    on DayReservation
-    after delete
-as
-    begin
-        set nocount on
-        delete from DayParticipant
-            where DayReservationID in (
-                    select DayReservationID from deleted
-                )
-    end
-go
-
-create trigger trigger_deleteNULLEmployeeAfterDeletingDayParticipant
-    on DayParticipant
-    after delete
-as
-    begin
-        set nocount on
-        delete from Employee
-            where PersonID in (
-                select PersonID from deleted
-            ) and FirstName is null and LastName is null
-    end
-go
-
-create trigger trigger_deletePersonAfterDeletingNULLEmployees
-    on Employee
-    after delete
-as
-    begin
-        set nocount on
-        delete from Person
-        where PersonID in (
-            select PersonID from deleted
-        )
-    end
-go
-
-create trigger trigger_deleteStudentAfterDeletingPerson
-    on Person
-    after delete
-as
-    begin
-        set nocount on
-        delete from Student
-        where PersonID in (
-                select PersonID from deleted
-        )
-    end
-go
-
-create trigger trigger_deleteWorkshopReservationAfterDeletingDayReservation
-    on DayReservation
-    after delete
-as
-    begin
-        set nocount on
-        Delete from WorkshopReservation
-            where DayReservationID in(
-                select DayReservationID from deleted
-            )
-    end
 go
 
 
-create trigger trigger_deleteWorkshopParticipantsAfterDeletingWorkshopReservation
-    on WorkshopReservation
-    after delete
-as
-    begin
-        set nocount on
-        Delete from WorkshopParticipant
-            where WorkshopReservationID in (
-                select WorkshopReservationID from deleted
-            )
-    end
-go
+
+

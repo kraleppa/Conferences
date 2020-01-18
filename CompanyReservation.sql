@@ -172,14 +172,15 @@ begin
         begin
             ;throw 52000, 'ClientID is compulsory', 1
         end
-        insert Person default values
-        declare @PersonID int = @@IDENTITY
-        insert into Employee(ClientID, PersonID, FirstName, LastName)
-        VALUES(@ClientID, @PersonID, null, null)
+        declare @PersonID int;
         if (@StudentIDCard is not null)
         begin
             if not exists(select * from Student where StudentCardID = @StudentIDCard)
             begin
+                insert Person default values
+                set @PersonID = @@IDENTITY
+                insert into Employee(ClientID, PersonID, FirstName, LastName)
+                VALUES(@ClientID, @PersonID, null, null)
                 insert into Student(StudentCardID, PersonID)
                 Values (@StudentIDCard, @PersonID)
             end
@@ -191,6 +192,7 @@ begin
 		;throw 52000, @errorMessage, 1
     end catch
 end
+    go
 
 create procedure procedure_addWorkshopCompanyReservation
     @ClientID int,
