@@ -239,7 +239,7 @@ go
 
 
 --zwraca list� rezerwacji ktore nie zostaly oplacone oraz czas jaki pozostal
-create function function_unpaidReservations(@ClientID int)
+/*create function function_unpaidReservations(@ClientID int)
 	returns table
 	as
 	return (
@@ -249,7 +249,7 @@ create function function_unpaidReservations(@ClientID int)
 		where ClientID = @ClientID
 			and PaymentDate is null
 	)
-go
+go*/
 
 
 --zwraca cene normalnego biletu w danej rezerwacji

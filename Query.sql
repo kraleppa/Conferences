@@ -1,4 +1,28 @@
-select * from Clients
+
+select * from function_showUnpaidReservations(1)
+
+select * from Student
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/*select * from Clients
 select * from Conferences
 
 sele
@@ -35,4 +59,4 @@ select * from DayParticipant
 select * from Reservation
 select * from DayReservation
 select * from DayParticipant
-select * from IndividualClient
+select * from IndividualClient*/
