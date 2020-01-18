@@ -1,6 +1,7 @@
 use u_nalepa
 -- tables
 -- Table: City
+
 CREATE TABLE City (
     CityID int identity(1,1) NOT NULL,
     CountryID int  NOT NULL,

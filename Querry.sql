@@ -86,3 +86,57 @@ delete from Reservation where ReservationID = 1
 
 
 select * from function_reservationSummary (12)
+
+select * from Reservation
+select * from function_reservationSummary(7)
+
+select * from function_generateCompanyInvoice(7)
+
+exec procedure_deleteReservation 7
+
+exec procedure_companyReservation 2, 1, '2022-07-20,1,305376;2022-07-21,1,305376'
+
+declare @NameList NamesTable
+declare @ConferenceList ConferenceTable
+declare @WorkshopList WorkshopTable
+
+insert into @NameList(Imie, Nazwisko, Legitymacja)
+VALUES ('Krzysztof', 'Nalepa', '305376')
+insert into @NameList(Imie, Nazwisko, Legitymacja)
+VALUES ('Jan', 'Kowalski', null)
+
+
+insert into @ConferenceList (IDOsoby, Data)
+VALUES(1, '2022-07-20')
+insert into @ConferenceList (IDOsoby, Data)
+VALUES(1, '2022-07-21')
+insert into @ConferenceList (IDOsoby, Data)
+VALUES(2, '2022-07-20')
+insert into @ConferenceList (IDOsoby, Data)
+VALUES(2, '2022-07-21')
+
+
+exec procedure_addCompanyEmployeeInformation 2, 8,
+    @NameList, @ConferenceList, @WorkshopList
+
+exec procedure_addPayment 8
+select * from function_generateCompanyInvoice(8)
+
+
+
+select * from Student
+
+exec procedure_deleteReservation 8
+select * from view_conferencesSeatsLeft
+
+select * from Conferences
+
+select * from Reservation
+
+select * from Reservation
+
+select * from Conferences inner join ConferenceDay CD on Conferences.ConferenceID = CD.ConferenceID
+
+select * from ConferenceDay
+
+select * from Workshop
