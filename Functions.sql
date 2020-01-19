@@ -641,7 +641,7 @@ create function function_showEmployees(@CompanyID int)
     returns table
     as
     return (
-        select e.FirstName, e.LastName
+        select C.CompanyName, e.FirstName, e.LastName
         from Employee as e
             inner join Company C
                 on e.ClientID = C.ClientID
@@ -669,4 +669,26 @@ create function function_showFreeSeatsForConference(@conferenceID int)
 			on cd.ConferenceID = c.ConferenceID
 	where c.ConferenceID = @conferenceID
     )
+go
+
+
+--zwraca wartosc rezerwacji (tylko)
+create function function_returnReservationCost(@reservationID int)
+    returns int
+    as
+    begin
+        return (
+            select sum(dr.NormalTickets*dbo.function_returnNormalTicketCost(@reservationID))
+                +
+                sum(dr.StudentTickets*dbo.function_returnStudentTicketCost(@reservationID))
+                +
+                sum(isnull(wr.Tickets*w.Price, 0)) as Cost
+            from DayReservation as dr
+                left outer join WorkshopReservation wr
+                        on dr.DayReservationID = wr.DayReservationID
+                left outer join Workshop w
+                    on wr.WorkshopID = w.WorkshopID
+            where dr.ReservationID = @reservationID
+        )
+    end
 go

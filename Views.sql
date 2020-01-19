@@ -127,7 +127,7 @@ go
 
 --wyswietla nadchodzace warsztaty
 CREATE VIEW view_upcomingWorkshops as
-	select w.WorkshopID, wd.WorkshopName, wd.WorkshopDescription, wd.Price,
+	select w.WorkshopID, wd.WorkshopName, wd.WorkshopDescription, w.Limit, wd.Price,
 		c.ConferenceID, c.ConferenceName, cd.ConferenceDate, w.StartTime, w.EndTime
 		from Workshop as w 
 		inner join WorkshopDictionary as wd
