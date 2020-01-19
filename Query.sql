@@ -1,8 +1,13 @@
 select * from function_showUnpaidReservations(1)
 
-select * from Student
+select * from Prices where ConferenceID = 2
+select * from Conferences where ConferenceID = 8
 
 select *
-from IndividualClient as target
-    inner join Employee as e
-        on target.PersonID = e.PersonID
+from Person
+where PersonID not in (select personid from IndividualClient) and
+      PersonID not in (select PersonID from Employee) and
+      PersonID in (select PersonID from Student)
+
+
+select * from Prices
