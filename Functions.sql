@@ -38,7 +38,7 @@ create function function_workshopsDuringConference(@conf_id int)
 		select conf.ConferenceName, conf.ConferenceDescription,
 		       conf.Limit as 'Conf. limit',
 		       conf.BasePrice as 'Conf. price', conf.StudentDiscount, cd.ConferenceDate,
-		       conf.StartDate, Conf.EndDate, C.City, conf.Street, conf.BuildingNumber,
+		       conf.StartDate, w.WorkshopID,
 		       wd.WorkshopName, wd.WorkshopDescription, w.limit as 'W. limit',
 		       w.StartTime, w.EndTime, w.Price as 'W. Price'
 		from Conferences as conf
@@ -48,8 +48,6 @@ create function function_workshopsDuringConference(@conf_id int)
 				on w.ConferenceDayID = cd.ConferenceDayID
 			inner join WorkshopDictionary as wd 
 				on wd.WorkshopDictionaryID = w.WorkshopDictionaryID
-		    inner join City C
-		        on conf.CityID = C.CityID
 		where conf.ConferenceID = @conf_id
 	)
 go
@@ -632,7 +630,7 @@ create function function_showUnpaidReservations(@ClientID int)
         from Reservation as r
             inner join DayReservation as dr
                 on dr.ReservationID = r.ReservationID
-        where r.ClientID = 1 and r.PaymentDate is null
+        where r.ClientID = @ClientID and r.PaymentDate is null
         group by r.ReservationID, r.ReservationDate
     )
 go
