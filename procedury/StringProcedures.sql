@@ -141,5 +141,94 @@ as
 		;throw 52000, @errorMessage, 1
         end catch
     end
+go
+
+
+/* firstname1,lastname2,IDCard;ConfDay1,ConfDat2;WorkshopID1,WorkshopID2|firstname1,lastname2,null;ConfDay1;WorkshopID1*/
+create procedure procedure_EmployeeInformation
+    @ClientID int,
+    @ReservationID int,
+    @List varchar(4000)
+as
+    begin
+        set nocount on
+        begin try
+            declare @PeopleTable table (ID int identity (1,1), Details varchar(4000))
+            insert into @PeopleTable (Details)
+            select * from Split2 (@List, '|')
+
+
+            declare @PersonOut NamesTable;
+            declare @ConfOut ConferenceTable;
+            declare @WorkshopOut WorkshopTable;
+
+            declare @PersonDetails table(ID int identity(1,1), Details varchar(4000))
+            declare @PersonInfromations table(IDOsoby int identity (1,1), Details varchar(4000))
+            declare @PersonConfDays table (ID int identity (1,1), Details varchar(4000))
+            declare @PersonWorkshops table (ID int identity (1,1), Details varchar(4000))
+            declare @IDCard varchar(50);
+            declare @iterator1 int = 1;
+            declare @iterator2 int;
+            declare @idOsoby int;
+            while (@iterator1 <= (select max(id) from @PeopleTable))
+            begin
+                delete from @PersonDetails where ID <> 0
+                insert into @PersonDetails
+                select * from Split2((select Details from @PeopleTable where @iterator1 = ID), ';')
+
+                delete from @PersonInfromations where IDOsoby <> 0
+                insert into @PersonInfromations
+                select * from Split2((select Details from @PersonDetails where ID = (select min(id) from @PersonDetails)), ',')
+                set @IDCard = (select Details from @PersonInfromations where IDOsoby = (select min(IDOsoby) from @PersonInfromations) + 2)
+                if (@IDCard like 'null')
+                    set @IDCard = null
+                insert into @PersonOut (Imie, Nazwisko, Legitymacja)VALUES
+                ((select Details from @PersonInfromations where IDOsoby = (select min(IDOsoby) from @PersonInfromations)),
+                (select Details from @PersonInfromations where IDOsoby = (select min(IDOsoby) from @PersonInfromations) + 1),
+                 @IDCard)
+                set @idOsoby = @@IDENTITY;
+
+                delete from @PersonConfDays where ID <> 0
+                insert into @PersonConfDays (Details)
+                select * from Split2 ((select Details from @PersonDetails where ID = (select min(id) from @PersonDetails) + 1), ',')
+
+                set @iterator2 = (select min(ID) from @PersonConfDays)
+                while (@iterator2 <= (select max(id) from @PersonConfDays))
+                begin
+                    insert into @ConfOut (IDOsoby, Data)
+                    VALUES (@idOsoby, (select Details from @PersonConfDays where ID = @iterator2))
+                    set @iterator2 = @iterator2 + 1;
+                end
+
+                delete from @PersonWorkshops where ID <> 0
+                insert into @PersonWorkshops (Details)
+                select * from Split2 ((select Details from @PersonDetails where ID = (select min(id) from @PersonDetails) + 2), ',')
+
+                set @iterator2 = (select min(ID) from @PersonWorkshops)
+                while (@iterator2 <= (select max(id) from @PersonWorkshops))
+                begin
+                    if ((select Details from @PersonWorkshops where ID = @iterator2) not like '')
+                    begin
+                        insert into @WorkshopOut (IDOsoby, WorkshopID)
+                        VALUES (@idOsoby, (select Details from @PersonWorkshops where ID = @iterator2))
+
+                    end
+                    set @iterator2 = @iterator2 + 1;
+                end
+                set @iterator1 = @iterator1 + 1
+            end
+
+            exec procedure_addCompanyEmployeeInformation @ClientID, @ReservationID, @PersonOut, @ConfOut, @WorkshopOut
+        end try
+        begin catch
+            declare @errorMessage nvarchar(2048)
+			= 'Cannot add reservation details. Error message: '
+			+ error_message();
+		;throw 52000, @errorMessage, 1
+        end catch
+    end
+go
+
+
 
 

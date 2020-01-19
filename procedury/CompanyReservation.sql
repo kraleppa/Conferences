@@ -261,6 +261,8 @@ begin
 end
 go
 
+
+
 create procedure procedure_addCompanyEmployeeInformation
     @ClientID int,
     @ReservationID int,
@@ -387,7 +389,7 @@ begin
                 end
                 else
                 begin
-                    set @PersonID = (select PersonID from Student where StudentCardID = @StudentIDCard)
+                    set @PersonID = (select TOP 1 PersonID from Student where StudentCardID = @StudentIDCard)
                     update Employee
                     set FirstName = @FirstName, LastName = @LastName
                     where PersonID = @PersonID
@@ -429,7 +431,7 @@ begin
                             ;throw 52000, 'User is not Day Participant', 1
                         end
 
-                        set @DayParticipantID = (select DayParticipantID from WorkshopReservation WR
+                        set @DayParticipantID = (select TOP 1 DayParticipantID from WorkshopReservation WR
                             inner join DayReservation DR3 on WR.DayReservationID = DR3.DayReservationID
                             inner join DayParticipant DP on DR3.DayReservationID = DP.DayReservationID
                             where ReservationID = @ReservationID and PersonID = @PersonID)

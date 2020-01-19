@@ -140,3 +140,53 @@ select * from Conferences inner join ConferenceDay CD on Conferences.ConferenceI
 select * from ConferenceDay
 
 select * from Workshop
+
+select max(ReservationID) from Reservation
+select max(ClientID) from Clients
+select max(ConferenceID) from Conferences
+select max(WorkshopID) from Workshop
+
+exec procedure_addConference 'Edukacja', 'Opis', '2022-07-20', '2022-07-25', 'Krakow', 'Polska',
+    'dluga', '21', 0.1, 20, 10
+
+exec procedure_addWorkshop 1, '2022-7-20', 71, '09:00:00', '10:00:00',
+    20
+
+select * from Workshop
+
+exec procedure_addWorkshop 1, '2022-07-20', 71, '08:00:00', '11:00:00',
+    20
+
+select * from function_workshopsDuringConference(71)
+
+exec procedure_addCompany 'AGH', '0123456789', '502748827',
+    'agh@edu.pl', 'Polska', 'Krakow', 'Krotka',
+    '1'
+
+select * from Company where CompanyName like 'AGH'
+
+ --'2022-07-20,30,305376,305377,305378,305379;2022-07-21,20,305376,305377,305378,305379'
+exec procedure_companyReservation 2201, 71,
+    '2022-7-20,1,305376'
+
+select * from Workshop
+
+select * from function_showUnpaidReservations(2201)
+select * from function_reservationSummary (3001)
+select * from function_
+
+exec procedure_addWorkshopCompanyReservation 2201,842,
+    1
+--firstname1,lastname2,IDCard;ConfDay1,ConfDat2;WorkshopID1,WorkshopID2|firstname1,lastname2,null;ConfDay1;WorkshopID1*/
+
+exec procedure_EmployeeInformation 2201, 3001,
+    'Krzysztof,Nalepa,305376;2022-07-20;842|Marian,Kowalski,null;2022-07-20;'
+
+
+select * from Student where StudentCardID = '305376'
+
+
+select * from DayParticipant
+
+
+
