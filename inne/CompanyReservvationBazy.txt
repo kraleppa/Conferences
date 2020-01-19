@@ -1,0 +1,49 @@
+Company client tworzy rezerwacje konferencji:
+1. Jest tworzona krotka w reservation
+2. Jest tworzona krotka w day_reservation
+3. Są tworzone krotki w Employee, Person i jeżeli jest studentem to w Student
+imie i nazwisko jest wypełnione nullem
+
+Company tworzy rezerwacje warsztatu
+1. Tworzy krotkę w workshop reservation
+2. Sprawdza czy ilość osób zarezerwowanych na dany dzień pozwala na to aby
+móc zarezerwować warsztat (np chce zarezerwować 50 miejsc na warsztat ale 
+na konferencje ma zarezerwowane w sumie 10 miejsc)
+
+Company dzowni mówi eluwina jestem firmą taką (ClientID) zrobiłam rezerwacje (ReservationID) chce podać dane
+I. Podaje dane w postaci tablic 
+a) tablica nazwisk
+(IDOsoby, imie, nazwisko, legitymacja/null)
+b) tablica konferencji danej osoby
+(ID, IDOsoby, data)
+c) tablica warsztatu danej osoby
+(ID, IDOsoby, WorkshopID)
+
+II. Iteruje sobie po tablicy nazwisk (konkretnie po IDOsoby)
+   	1. Jeżeli legitymacja to null
+		a) Szukam w Employee jakiejkolwiek wynullowanej krotki, 
+		która należy do danej firmy (na podstawie ClientID)
+		b) Wstawiam sobie tam imie i nazwisko
+		c) Zapisuje PersonID
+   	w przeciwnym wypadku
+		a) Wyszukuje w StudentID dany numer legitymacji
+		b) Do persona który ma przydzielny dany numer legitymacji wstawiam
+		imie i nazwisko
+		c) Zapisuje PersonID
+	2. Iteruje po konferencjach (konkretnie po ID)
+		a) Biore sobie zapisane wczesniej PersonID
+		b) Wyszukuje odpowiednia DayConfernceReservation (na podstawie day, Reservation)
+		c) Dołczam day_participanta do danej rezerwacji (zapisane PersonID i znaleziona punkt wyzej DayConferenceReservation)
+	3. Iteruje po warsztatach (konkretnie po ID)
+		a) biore sobie zapisane wczesniej PersonID
+		b) Wyszukuje odpowiednie workshopReseravtionID (na podstawie reservation i WorkshopID)
+		c) Wyszukuje DayParticiapantID (na podstawie person i DayReservationID z workshopreservation) 
+		(sprawdzam czy na pewno osoba bierze udział w konf)
+		d) Tworze sobie WorkshopParticipanta na podstawie DayParticipantID i WorkshopReservation
+	4. To wszystko co robie dla danej osoby wiec IDOsoby++
+
+
+
+		 
+
+ 
