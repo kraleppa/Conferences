@@ -12,3 +12,8 @@ Próbowałem odpalać na tym funkcję i dziłało
 
 pozdrawiam 
 godzina 06:09 ide spać
+
+Aha i jak coś to każdy z tych skryptów
+W DataGripe wykonywał się paręnaście 
+sekund, więc zanim mnie zaczniesz wykonaćż 
+że nie działa to poczekaj chwilę pliz
