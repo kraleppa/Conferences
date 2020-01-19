@@ -1,13 +1,18 @@
-select * from function_showUnpaidReservations(1)
+select * from view_companiesYetToFillEmployees
 
-select * from Prices where ConferenceID = 2
-select * from Conferences where ConferenceID = 8
+select * from view_workshopsSeatLeft
 
-select *
-from Person
-where PersonID not in (select personid from IndividualClient) and
-      PersonID not in (select PersonID from Employee) and
-      PersonID in (select PersonID from Student)
+--confID
+select * from function_showFreeSeatsForConference (1)
 
+--reservationID
+select * from function_reservationSummary (1)
 
-select * from Prices
+--clientID
+select * from function_showUnpaidReservations (1)
+
+--confID
+select * from function_workshopsDuringConference (1)
+
+--confID, startDate,discount
+exec procedure_addPriceThreshold

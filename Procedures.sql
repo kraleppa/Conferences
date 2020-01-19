@@ -688,7 +688,11 @@ set nocount on
             ;throw 52000, 'Client does not exists', 1
         end
 		--sprawdzam czy client jest ind
-		if not exists(select * from Clients as c inner join IndividualClient IC on c.ClientID = IC.ClientID where c.ClientID = @ClientID)
+		if not exists(
+		    select * from Clients as c
+		        inner join IndividualClient IC
+		            on c.ClientID = IC.ClientID where c.ClientID = @ClientID
+		    )
 		begin
             ;throw 52000, 'Client is not individual', 1
         end
@@ -719,7 +723,8 @@ set nocount on
 		while (@iterator <= @max)
 		begin
 		    set @day = (select ConferenceDate from @DayList where ID = @iterator)
-		    declare @ConferenceDayID int = dbo.function_returnConferenceDay (@ConferenceID, @day);
+		    declare @ConferenceDayID int =
+		        dbo.function_returnConferenceDay (@ConferenceID, @day);
 		    if (@ConferenceDayID is null)
 		    begin
                 ;throw 52000, 'Conference day does not exists', 1

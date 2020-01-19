@@ -238,20 +238,6 @@ create function function_returnPersonID(@ReservationID int)
 go
 
 
---zwraca list� rezerwacji ktore nie zostaly oplacone oraz czas jaki pozostal
-/*create function function_unpaidReservations(@ClientID int)
-	returns table
-	as
-	return (
-		select ReservationID, 
-			DATEDIFF(day, GETDATE(), DATEADD(day, 7, ReservationDate)) as 'Days left'
-		from Reservation 
-		where ClientID = @ClientID
-			and PaymentDate is null
-	)
-go*/
-
-
 --zwraca cene normalnego biletu w danej rezerwacji
 create function function_returnNormalTicketCost(@reservationID int)
 	returns int

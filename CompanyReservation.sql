@@ -18,7 +18,10 @@ begin
                 ;throw 52000, 'Client does not exists', 1
             end
 
-            if not exists(select * from Clients as c inner join Company C2 on c.ClientID = C2.ClientID where c.ClientID = @ClientID)
+            if not exists(
+                select * from Clients as c
+                    inner join Company C2
+                        on c.ClientID = C2.ClientID where c.ClientID = @ClientID)
 		    begin
                 ;throw 52000, 'Client is not Company', 1
             end
@@ -67,7 +70,8 @@ begin
             while (@iterator1 <= @numberOfDays)
             begin
                 set @Date = (select ConferenceDate from @DayList where ID = @iterator1)
-                set @conferenceDayID = dbo.function_returnConferenceDay (@ConferenceID, @Date);
+                set @conferenceDayID =
+                    dbo.function_returnConferenceDay (@ConferenceID, @Date);
                 if (@ConferenceDayID is null)
                 begin
                     ;throw 52000, 'Conference day does not exist', 1
@@ -78,7 +82,11 @@ begin
                     ;throw 52000, 'Number of tickets is invalid', 1
                 end
                 set @studentTickets = (select count(*) from @StudentList where ConferenceDate = @date);
-/*wrocic*/      exec procedure_addCompanyDayReservation @ReservationID, @conferenceDayID, @normalTickets, @StudentTickets
+/*wrocic*/      exec procedure_addCompanyDayReservation
+    @ReservationID,
+    @conferenceDayID,
+    @normalTickets,
+    @StudentTickets
                 set @DayReservationID = @@IDENTITY;
 
                 --dodaje studentow do danego dnia
