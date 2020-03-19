@@ -40,3 +40,6 @@ w tym średnio w każdym dniu są 4 warsztaty. Na każdą konferencję średnio 
 200 osób. Stworzona baza danych powinna zostać wypełniona w takim stopniu, aby
 odpowiadała 3-letniej działalności firmy.
  
+### Authors:
+* **Krzysztof Nalepa** - [kraleppa](https://github.com/kraleppa)
+* **Jakub Solecki** - [jakubsolecki](https://github.com/jakubsoleck)
