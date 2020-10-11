@@ -1,4 +1,10 @@
 # Conferences - System zarządzania konferencjami
+
+## Project description
+Project was a part of database classes. The main goal was to create a database system for company which organizes confrences.
+
+## Requirements
+
 ### Opis problemu
 Projekt dotyczy systemu wspomagania działalności firmy organizującej konferencje:
 
@@ -39,7 +45,19 @@ organizator chciałby mieć informację o klientach, którzy najczęściej korzy
 w tym średnio w każdym dniu są 4 warsztaty. Na każdą konferencję średnio rejestruje się
 200 osób. Stworzona baza danych powinna zostać wypełniona w takim stopniu, aby
 odpowiadała 3-letniej działalności firmy.
- 
-### Authors:
-* **Krzysztof Nalepa** - [kraleppa](https://github.com/kraleppa)
-* **Jakub Solecki** - [jakubsolecki](https://github.com/jakubsoleck)
+
+## Database diagram
+![diagram](https://github.com/kraleppa/conferences/blob/master/schemat%20bazy.PNG)
+
+## Documentation
+https://docs.google.com/document/d/1hsIda8uZYX6Z50RRbwqy7R4PR8k5gudpohNYhq2Ojj4/edit?usp=sharing
+
+## Contributors :mushroom:
+<table>
+  <tr>
+    <td align="center"><a href="https://github.com/kraleppa"><img src="https://avatars1.githubusercontent.com/u/56135216?s=460&u=359e017d16c70a31d3bdb086172308cc6f045acf&v=4" width="100px;" alt=""/><br /><sub><b>Krzysztof Nalepa</b></sub></a><br /></td>
+    <td align="center"><a href="https://github.com/jakubsolecki"><img src="https://avatars3.githubusercontent.com/u/57220835?s=400&v=4" width="100px;" alt=""/><br /><sub><b>Jakub Solecki</b></sub></a><br />
+    </td>
+  </tr>
+</table>
+
